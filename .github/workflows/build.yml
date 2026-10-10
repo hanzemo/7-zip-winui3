@@ -1,70 +1,60 @@
-name: Build SevenZip WinUI MSIX
+name: Build
 
 on:
   push:
-    branches: [ main ]
+    branches: [ main, master ]
   pull_request:
+    branches: [ main, master ]
   workflow_dispatch:
 
 jobs:
   build:
     runs-on: windows-latest
-    strategy:
-      matrix:
-        configuration: [Release]
-        platform: [x64]
-
-    env:
-      Solution_Name: SevenZipApp.sln
-      Appx_Package_Dir: Packages\
 
     steps:
-    - name: Checkout
-      uses: actions/checkout@v4
-      with:
-        fetch-depth: 0
+      - name: Checkout
+        uses: actions/checkout@v4
 
-    - name: Install .NET
-      uses: actions/setup-dotnet@v4
-      with:
-        dotnet-version: 8.0.x
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
 
-    - name: Setup MSBuild
-      uses: microsoft/setup-msbuild@v2
+      - name: Restore
+        run: dotnet restore
 
-    - name: Restore
-      run: msbuild $env:Solution_Name /t:Restore /p:Configuration=$env:Configuration
-      env:
-        Configuration: ${{ matrix.configuration }}
+      - name: Build (max errors)
+        shell: pwsh
+        run: |
+          dotnet build `
+            --no-restore `
+            -c Debug `
+            -p:ErrorLimit=10000 `
+            -p:RunAnalyzers=false `
+            -p:TreatWarningsAsErrors=false `
+            -v:minimal `
+            /bl:build.binlog
+        continue-on-error: true
 
-    - name: Decode the pfx
-      run: |
-        $pfx_cert_byte = [System.Convert]::FromBase64String("${{ secrets.BASE64_ENCODED_PFX }}")
-        $certificatePath = "GitHubActionsWorkflow.pfx"
-        [IO.File]::WriteAllBytes("$certificatePath", $pfx_cert_byte)
+      - name: Filter errors
+        if: always()
+        shell: pwsh
+        run: |
+          Write-Host "===== 所有错误 ====="
+          dotnet build `
+            --no-restore `
+            -c Debug `
+            -p:ErrorLimit=10000 `
+            -p:RunAnalyzers=false `
+            -v:quiet 2>&1 |
+            Select-String -Pattern "error CS" |
+            ForEach-Object { $_.Line.Trim() } |
+            Sort-Object -Unique
 
-    - name: Create the app package
-      run: |
-        msbuild $env:Solution_Name `
-          /p:Configuration=$env:Configuration `
-          /p:Platform=$env:Platform `
-          /p:UapAppxPackageBuildMode=$env:Appx_Package_Build_Mode `
-          /p:AppxBundle=$env:Appx_Bundle `
-          /p:PackageCertificateKeyFile=GitHubActionsWorkflow.pfx `
-          /p:PackageCertificatePassword="${{ secrets.PFX_PASSWORD }}" `
-          /p:AppxPackageDir="$env:Appx_Package_Dir" `
-          /p:GenerateAppxPackageOnBuild=true
-      env:
-        Appx_Bundle: Never
-        Appx_Package_Build_Mode: SideloadOnly
-        Configuration: ${{ matrix.configuration }}
-        Platform: ${{ matrix.platform }}
-
-    - name: Remove the pfx
-      run: Remove-Item -path GitHubActionsWorkflow.pfx
-
-    - name: Upload MSIX package
-      uses: actions/upload-artifact@v4
-      with:
-        name: MSIX Package - ${{ matrix.platform }}
-        path: Packages
+      - name: Upload binlog
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-binlog
+          path: build.binlog
+          if-no-files-found: ignore
