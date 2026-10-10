@@ -20,64 +20,45 @@ jobs:
         with:
           dotnet-version: '8.0.x'
 
-      - name: Show project files
-        shell: pwsh
-        run: |
-          Write-Host "===== 仓库结构 ====="
-          Get-ChildItem -Recurse -Filter *.csproj | Select-Object FullName
-          Write-Host "===== 工作目录 ====="
-          Get-Location
-
       - name: Restore
         shell: pwsh
-        run: dotnet restore -v:minimal
+        run: dotnet restore -v:quiet
 
-      - name: Build (full diagnostic)
+      - name: Build
         if: always()
         shell: pwsh
         continue-on-error: true
         run: |
-          Write-Host "===== 开始完整构建 ====="
           dotnet build `
             --no-restore `
             -c Debug `
             -p:ErrorLimit=10000 `
             -p:RunAnalyzers=false `
-            -p:TreatWarningsAsErrors=false `
-            -v:diag `
-            /bl:build.binlog 2>&1 | Tee-Object -FilePath build-diag.log
-          Write-Host "===== 退出码: $LASTEXITCODE ====="
+            -v:quiet `
+            2>&1 | Tee-Object -FilePath build.log
+          Write-Host "exit=$LASTEXITCODE"
 
-      - name: Extract real errors
+      - name: Show errors only
         if: always()
         shell: pwsh
         run: |
-          Write-Host "===== XAML 编译器错误 ====="
-          if (Test-Path build-diag.log) {
-            Get-Content build-diag.log |
-              Select-String -Pattern "XamlCompiler|MSB3073|error CS|error XLS|error WMC" |
-              ForEach-Object { $_.Line.Trim() } |
-              Sort-Object -Unique |
-              Select-Object -First 200
+          Write-Host "===== 错误 ====="
+          Get-Content build.log |
+            Where-Object { $_ -match 'error|Error|FAILED|MSB\d{4}|XLS\d{4}|WMC\d{4}' } |
+            Select-Object -Unique
+
+      - name: Run XamlCompiler manually
+        if: always()
+        shell: pwsh
+        run: |
+          $input  = "SevenZipApp\obj\x64\Debug\net8.0-windows10.0.22621.0\input.json"
+          $output = "SevenZipApp\obj\x64\Debug\net8.0-windows10.0.22621.0\output.json"
+          $xamlc  = "$env:USERPROFILE\.nuget\packages\microsoft.windowsappsdk\1.4.240512000\tools\net472\XamlCompiler.exe"
+
+          Write-Host "===== XamlCompiler 原始输出 ====="
+          if ((Test-Path $input) -and (Test-Path $xamlc)) {
+            & $xamlc $input $output 2>&1 | ForEach-Object { Write-Host $_ }
+            Write-Host "退出码: $LASTEXITCODE"
           } else {
-            Write-Host "build-diag.log 不存在"
+            Write-Host "input.json: $(Test-Path $input) / XamlCompiler: $(Test-Path $xamlc)"
           }
-
-      - name: Show tail of log
-        if: always()
-        shell: pwsh
-        run: |
-          Write-Host "===== 日志末尾 100 行 ====="
-          if (Test-Path build-diag.log) {
-            Get-Content build-diag.log -Tail 100
-          }
-
-      - name: Upload logs
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: build-logs
-          path: |
-            build.binlog
-            build-diag.log
-          if-no-files-found: warn
