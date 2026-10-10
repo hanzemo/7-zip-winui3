@@ -36,7 +36,7 @@ SPDX-License-Identifier: GPL-2.0-or-later
                 </ComboBox>
 
                 <TextBlock Text="历史记录" Style="{StaticResource SubtitleTextBlockStyle}" Margin="0,0,0,12"/>
-                <ToggleSwitch Content="保存打开记录" IsOn="True" Margin="0,0,0,8"/>
+                <ToggleSwitch Header="保存打开记录" IsOn="True" Margin="0,0,0,8"/>
                 <TextBox PlaceholderText="保存记录数量" Margin="0,0,0,16"/>
             </StackPanel>
         </ScrollViewer>

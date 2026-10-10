@@ -39,7 +39,7 @@ SPDX-License-Identifier: GPL-2.0-or-later
             Grid.Row="1"
             IsBackButtonVisible="Collapsed"
             IsPaneToggleButtonVisible="True"
-            PaneDisplayMode="LeftExpand"
+            PaneDisplayMode="Left"
             BackRequested="NavView_BackRequested"
             ItemInvoked="NavView_ItemInvoked">
 
