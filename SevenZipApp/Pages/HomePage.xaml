@@ -7,6 +7,7 @@ SPDX-License-Identifier: GPL-2.0-or-later
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:local="using:SevenZipApp"
     mc:Ignorable="d"
     Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
 
@@ -36,7 +37,7 @@ SPDX-License-Identifier: GPL-2.0-or-later
                 </ItemsPanelTemplate>
             </GridView.ItemsPanel>
             <GridView.ItemTemplate>
-                <DataTemplate>
+                <DataTemplate x:DataType="local:ArchiveItem">
                     <StackPanel HorizontalAlignment="Center" VerticalAlignment="Top">
                         <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
                                 Padding="16,16,16,16"
@@ -51,7 +52,7 @@ SPDX-License-Identifier: GPL-2.0-or-later
                                            FontWeight="SemiBold"
                                            Margin="0,0,0,8"
                                            HorizontalAlignment="Center"/>
-                                <TextBlock Text="{x:Bind Count, Mode=OneWay, StringFormat='{}{0} 个条目'}"
+                                <TextBlock Text="{x:Bind Count, Mode=OneWay}"
                                            FontSize="12"
                                            Foreground="{ThemeResource TextFillColorSecondary}"
                                            HorizontalAlignment="Center"/>

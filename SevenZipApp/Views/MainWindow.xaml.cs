@@ -4,6 +4,8 @@
 
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
+using Microsoft.UI.Xaml.Media.Animation;
+using SevenZipApp.Pages;
 using System;
 
 namespace SevenZipApp.Views;
@@ -14,14 +16,10 @@ public sealed partial class MainWindow : Window
     {
         this.InitializeComponent();
 
-        // 自定义标题栏：必须在 code-behind 中设置（WinUI 3 不支持在 XAML 中设置）。
         this.ExtendsContentIntoTitleBar = true;
-
-        // 让自定义标题栏区域可以拖动窗口。
         this.SetTitleBar(this.TitleBarGrid);
 
-        // 初始页面。
-        this.MainFrame.Navigate(typeof(Pages.HomePage));
+        this.MainFrame.Navigate(typeof(HomePage));
 
         Logger.Info("MainWindow 初始化完成", "MainWindow");
     }
@@ -44,17 +42,17 @@ public sealed partial class MainWindow : Window
 
         Logger.Info($"导航到页面: {tag}", "MainWindow");
 
-        MainFrame.ContentTransitions = null;
+        MainFrame.ContentTransitions = new TransitionCollection();
 
         Type? pageType = tag switch
         {
-            "Home"          => typeof(Pages.HomePage),
-            "Compress"      => typeof(Pages.CompressPage),
-            "Extract"       => typeof(Pages.ExtractPage),
-            "FileExplorer"  => typeof(Pages.FilesPage),
-            "Archive"       => typeof(Pages.ArchivePage),
-            "Settings"      => typeof(Pages.SettingsPage),
-            _               => null,
+            "Home"         => typeof(HomePage),
+            "Compress"     => typeof(CompressPage),
+            "Extract"      => typeof(ExtractPage),
+            "FileExplorer" => typeof(FilesPage),
+            "Archive"      => typeof(ArchivePage),
+            "Settings"     => typeof(SettingsPage),
+            _              => null,
         };
 
         if (pageType != null)

@@ -8,10 +8,7 @@ SPDX-License-Identifier: GPL-2.0-or-later
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d"
-    Width="1000"
-    Height="700"
-    Title="7-Zip WinUI3"
-    RequestedTheme="Light">
+    Title="7-Zip WinUI3">
 
     <Grid>
         <Grid.RowDefinitions>
@@ -19,16 +16,15 @@ SPDX-License-Identifier: GPL-2.0-or-later
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
 
-        <!-- 自定义标题栏带应用图标和名称 -->
+        <!-- 自定义标题栏 -->
         <Grid Grid.Row="0" x:Name="TitleBarGrid" Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*"/>
                 <ColumnDefinition Width="Auto"/>
             </Grid.ColumnDefinitions>
 
-            <!-- App Title -->
-            <TextBlock 
-                Text="7-Zip WinUI3" 
+            <TextBlock
+                Text="7-Zip WinUI3"
                 Grid.Column="1"
                 VerticalAlignment="Center"
                 FontSize="14"

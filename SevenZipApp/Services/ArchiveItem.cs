@@ -38,10 +38,10 @@ public sealed class ArchiveItem
     /// <summary>人类可读的大小字符串，用于 UI 显示。</summary>
     public string SizeDisplay => FormatBytes(Size);
 
-    /// <summary>UI 图标字形（Unicode）。</summary>
-    public string IconGlyph => IsFolder ? "" /* 文件夹 */ : "" /* 文件 */;
+    /// <summary>UI 图标字形（Segoe MDL2 Assets）。</summary>
+    public string IconGlyph => IsFolder ? "\uE8B7" : "\uE8A5";
 
-    private static string FormatBytes(uint bytes)
+    private static string FormatBytes(ulong bytes)
     {
         string[] units = { "B", "KB", "MB", "GB", "TB" };
         double size = bytes;

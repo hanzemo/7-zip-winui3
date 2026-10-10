@@ -1,26 +1,34 @@
+// SPDX-License-Identifier: GPL-2.0-or-later
+//
+// App.xaml.cs —— 应用入口。
+
 using Microsoft.UI.Xaml;
 
 namespace SevenZipApp;
 
 public partial class App : Application
 {
-    private Window? _window;
+    public static Window? MainWindow { get; private set; }
 
     public App()
     {
+        Logger.Initialize();
+        Logger.Info("App 构造完成", "App");
+
         InitializeComponent();
     }
 
     protected override void OnLaunched(LaunchActivatedEventArgs args)
     {
-        if (_window != null)
+        if (MainWindow != null)
         {
-            // 应用已经被启动，只激活即可。
-            _window.Activate();
+            MainWindow.Activate();
             return;
         }
 
-        _window = new Views.MainWindow();
-        _window.Activate();
+        MainWindow = new Views.MainWindow();
+        MainWindow.Activate();
+
+        Logger.Info("MainWindow 已激活", "App");
     }
 }

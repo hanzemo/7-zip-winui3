@@ -6,9 +6,10 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
+using Microsoft.UI.Xaml.Media;
+using Microsoft.UI.Xaml.Navigation;
 using System;
 using System.Collections.ObjectModel;
-using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using Windows.Storage.Pickers;
@@ -27,14 +28,18 @@ public sealed partial class FilesPage : Page
         Logger.Info("FilesPage 初始化完成", "FilesPage");
     }
 
+    protected override void OnNavigatedTo(NavigationEventArgs e)
+    {
+        base.OnNavigatedTo(e);
+        if (e.Parameter is string path && !string.IsNullOrEmpty(path))
+            ViewModel.SetArchivePath(path);
+    }
+
     private void Back_Click(object sender, RoutedEventArgs e)
     {
         Logger.Warn("Back button clicked", "FilesPage");
-        var frame = FindMainFrame();
-        if (frame != null && frame.CanGoBack)
-        {
-            frame.GoBack();
-        }
+        if (this.Frame is Frame f && f.CanGoBack)
+            f.GoBack();
     }
 
     private void Refresh_Click(object sender, RoutedEventArgs e)
@@ -60,18 +65,6 @@ public sealed partial class FilesPage : Page
         }
 
         ViewModel.ExtractItemSelectedCommand.Execute(selectedItem);
-    }
-
-    private Frame? FindMainFrame()
-    {
-        var parent = this.Parent as DependencyObject;
-        while (parent != null)
-        {
-            if (parent is Frame f && f.Name == "MainFrame")
-                return f;
-            parent = VisualTreeHelper.GetParent(parent);
-        }
-        return null;
     }
 }
 
@@ -132,16 +125,15 @@ public class ArchiveListViewModel : ObservableObject
 
         Logger.Info($"解压整个归档：{_selectedArchivePath}", "ArchiveListViewModel");
 
-        var savePicker = new FolderPicker();
-        var folder = await savePicker.PickSingleFolderAsync();
+        var folder = await PickFolderAsync();
         if (folder == null) return;
 
         StatusMessage = "开始解压...";
         try
         {
             var engine = new SevenZipEngine();
-            await Task.Run(() => engine.Extract(_selectedArchivePath, folder.Path, null, null, CancellationToken.None));
-            StatusMessage = $"解压完成：{folder.Path}";
+            await Task.Run(() => engine.Extract(_selectedArchivePath, folder, null, null, CancellationToken.None));
+            StatusMessage = $"解压完成：{folder}";
             Logger.Info("解压完成", "ArchiveListViewModel");
         }
         catch (Exception ex)
@@ -161,8 +153,7 @@ public class ArchiveListViewModel : ObservableObject
             return;
         }
 
-        var savePicker = new FolderPicker();
-        var folder = await savePicker.PickSingleFolderAsync();
+        var folder = await PickFolderAsync();
         if (folder == null) return;
 
         StatusMessage = "解压单个项目...";
@@ -171,8 +162,8 @@ public class ArchiveListViewModel : ObservableObject
         try
         {
             var engine = new SevenZipEngine();
-            await Task.Run(() => engine.Extract(_selectedArchivePath, folder.Path, null, null, CancellationToken.None));
-            StatusMessage = $"解压完成：{folder.Path}";
+            await Task.Run(() => engine.Extract(_selectedArchivePath, folder, null, null, CancellationToken.None));
+            StatusMessage = $"解压完成：{folder}";
         }
         catch (Exception ex)
         {
@@ -187,5 +178,17 @@ public class ArchiveListViewModel : ObservableObject
         StatusMessage = "加载中...";
         _selectedArchivePath = archivePath;
         _ = RefreshCommand.ExecuteAsync(null);
+    }
+
+    private static async Task<string?> PickFolderAsync()
+    {
+        var picker = new FolderPicker();
+        picker.FileTypeFilter.Add("*");
+
+        var hwnd = WinRT.Interop.WindowNative.GetWindowHandle(App.MainWindow);
+        WinRT.Interop.InitializeWithWindow.Initialize(picker, hwnd);
+
+        var folder = await picker.PickSingleFolderAsync();
+        return folder?.Path;
     }
 }

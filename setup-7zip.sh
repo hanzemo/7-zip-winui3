@@ -1,0 +1,89 @@
+mkdir -p .github/workflows
+
+cat > .github/workflows/build.yml <<'YAMLEOF'
+name: Build
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Show project files
+        shell: pwsh
+        run: |
+          Write-Host "===== 仓库结构 ====="
+          Get-ChildItem -Recurse -Filter *.csproj | Select-Object FullName
+          Write-Host "===== 工作目录 ====="
+          Get-Location
+
+      - name: Restore
+        shell: pwsh
+        run: dotnet restore -v:minimal
+
+      - name: Build (full diagnostic)
+        if: always()
+        shell: pwsh
+        continue-on-error: true
+        run: |
+          Write-Host "===== 开始完整构建 ====="
+          dotnet build `
+            --no-restore `
+            -c Debug `
+            -p:ErrorLimit=10000 `
+            -p:RunAnalyzers=false `
+            -p:TreatWarningsAsErrors=false `
+            -v:diag `
+            /bl:build.binlog 2>&1 | Tee-Object -FilePath build-diag.log
+          Write-Host "===== 退出码: $LASTEXITCODE ====="
+
+      - name: Extract real errors
+        if: always()
+        shell: pwsh
+        run: |
+          Write-Host "===== XAML 编译器错误 ====="
+          if (Test-Path build-diag.log) {
+            Get-Content build-diag.log |
+              Select-String -Pattern "XamlCompiler|MSB3073|error CS|error XLS|error WMC" |
+              ForEach-Object { $_.Line.Trim() } |
+              Sort-Object -Unique |
+              Select-Object -First 200
+          } else {
+            Write-Host "build-diag.log 不存在"
+          }
+
+      - name: Show tail of log
+        if: always()
+        shell: pwsh
+        run: |
+          Write-Host "===== 日志末尾 100 行 ====="
+          if (Test-Path build-diag.log) {
+            Get-Content build-diag.log -Tail 100
+          }
+
+      - name: Upload logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-logs
+          path: |
+            build.binlog
+            build-diag.log
+          if-no-files-found: warn
+YAMLEOF
+
+echo "✔ 已写入 .github/workflows/build.yml"
