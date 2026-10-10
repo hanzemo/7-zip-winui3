@@ -23,19 +23,16 @@ SPDX-License-Identifier: GPL-2.0-or-later
             <AppBarButton Icon="Open" Label="解压到" Click="Extract_Click"/>
         </CommandBar>
 
-        <GridView Grid.Row="1"
-                  x:Name="FilesGridView"
-                  ItemsSource="{x:Bind ViewModel.Items}"
+        <ListView Grid.Row="1"
+                  x:Name="FilesListView"
+                  ItemsSource="{x:Bind ViewModel.Items, Mode=OneWay}"
                   SelectionMode="Single"
-                  ItemClick="FilesGridView_ItemClick"
-                  IsItemClickEnabled="True">
-            <GridView.ItemsPanel>
-                <ItemsPanelTemplate>
-                    <ItemsStackPanel Orientation="Vertical" Spacing="10"/>
-                </ItemsPanelTemplate>
-            </GridView.ItemsPanel>
-            <GridView.ItemTemplate>
-                <DataTemplate>
+                  ItemClick="FilesListView_ItemClick"
+                  IsItemClickEnabled="True"
+                  Padding="16">
+            <ListView.ItemTemplate>
+                <DataTemplate x:DataType="local:ArchiveItem"
+                              xmlns:local="using:SevenZipApp">
                     <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
                             Padding="16,12"
                             CornerRadius="4"
@@ -47,29 +44,30 @@ SPDX-License-Identifier: GPL-2.0-or-later
                                 <ColumnDefinition Width="Auto"/>
                             </Grid.ColumnDefinitions>
 
-                            <SymbolIcon Symbol="{x:Bind IsFolder} ? 'Folder' : 'File'"
-                                        Grid.Column="0"
-                                        Margin="0,0,12,0"/>
+                            <FontIcon Grid.Column="0"
+                                      Glyph="{x:Bind IconGlyph, Mode=OneWay}"
+                                      FontFamily="{ThemeResource SymbolThemeFontFamily}"
+                                      Margin="0,0,12,0"/>
 
                             <TextBlock Grid.Column="1"
-                                       Text="{x:Bind Name}"
+                                       Text="{x:Bind Name, Mode=OneWay}"
                                        TextWrapping="Wrap"
                                        FontSize="14"
                                        FontWeight="SemiBold"/>
 
                             <TextBlock Grid.Column="2"
-                                       Text="{x:Bind Size, StringFormat={}{0:0.##} MB}"
+                                       Text="{x:Bind SizeDisplay, Mode=OneWay}"
                                        FontSize="12"
                                        Foreground="{ThemeResource TextFillColorSecondary}"/>
                         </Grid>
                     </Border>
                 </DataTemplate>
-            </GridView.ItemTemplate>
-        </GridView>
+            </ListView.ItemTemplate>
+        </ListView>
 
         <TextBlock Grid.Row="2"
                    x:Name="StatusTextBlock"
-                   Text="{x:Bind ViewModel.StatusMessage}"
+                   Text="{x:Bind ViewModel.StatusMessage, Mode=OneWay}"
                    Foreground="{ThemeResource TextFillColorPrimary}"
                    Padding="8,8,8,8"/>
     </Grid>

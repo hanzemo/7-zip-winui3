@@ -2,96 +2,68 @@
 //
 // MainWindow.xaml.cs —— 主窗口，实现自定义标题栏、导航等。
 
-using Microsoft.UI;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using System;
-using System.Drawing;
 
-namespace SevenZipApp
+namespace SevenZipApp.Views;
+
+public sealed partial class MainWindow : Window
 {
-    public sealed partial class MainWindow : Window
+    public MainWindow()
     {
-        public MainWindow()
+        this.InitializeComponent();
+
+        // 自定义标题栏：必须在 code-behind 中设置（WinUI 3 不支持在 XAML 中设置）。
+        this.ExtendsContentIntoTitleBar = true;
+
+        // 让自定义标题栏区域可以拖动窗口。
+        this.SetTitleBar(this.TitleBarGrid);
+
+        // 初始页面。
+        this.MainFrame.Navigate(typeof(Pages.HomePage));
+
+        Logger.Info("MainWindow 初始化完成", "MainWindow");
+    }
+
+    private void NavView_BackRequested(NavigationView sender, NavigationViewBackRequestedEventArgs args)
+    {
+        Logger.Warn("BackRequested received", "MainWindow");
+        if (MainFrame.CanGoBack)
         {
-            this.InitializeComponent();
-            
-            this.ExtendsContentIntoTitleBar = true;
-            this.TitleBar.IsExtensionPresent = true;
-            this.TitleBar.ExtendsContentIntoTitleBar = true;
-            
-            this.SetTitleBar(this.FindChild<Grid>("TitleBarGrid"));
-            
-            Logger.Info("MainWindow 初始化完成", "MainWindow");
-        }
-
-        private void NavView_BackRequested(NavigationView sender, NavigationViewBackRequestedEventArgs args)
-        {
-            Logger.Warn("BackRequested received", "MainWindow");
-            if (MainFrame?.Content is FrameworkElement element && element.DataContext is Pages.HomePage homePage)
-            {
-                MainFrame.GoBack();
-            }
-        }
-
-        private void NavView_ItemInvoked(NavigationView sender, NavigationViewItemInvokedEventArgs args)
-        {
-            NavigationViewItem selectedItem = (NavigationViewItem)args.InvokedItemContainer;
-            string? tag = selectedItem.Tag?.ToString();
-            
-            Logger.Info($"导航到页面: {tag}", "MainWindow");
-
-            MainFrame.ContentTransitions = null;
-
-            switch (tag)
-            {
-                case "Home":
-                    MainFrame.Navigate(typeof(Pages.HomePage));
-                    break;
-                case "Compress":
-                    MainFrame.Navigate(typeof(Pages.CompressPage));
-                    break;
-                case "Extract":
-                    MainFrame.Navigate(typeof(Pages.ExtractPage));
-                    break;
-                case "FileExplorer":
-                    MainFrame.Navigate(typeof(Pages.FilesPage));
-                    break;
-                case "Archive":
-                    MainFrame.Navigate(typeof(Pages.ArchivePage));
-                    break;
-                case "Settings":
-                    MainFrame.Navigate(typeof(Pages.SettingsPage));
-                    break;
-                default:
-                    Logger.Warn($"未知导航标签: {tag}", "MainWindow");
-                    break;
-            }
-        }
-
-        private T? FindChild<T>(DependencyObject parent, string name) where T : DependencyObject
-        {
-            if (parent == null) return null;
-
-            int childCount = VisualTreeHelper.GetChildCount(parent);
-            for (int i = 0; i < childCount; i++)
-            {
-                DependencyObject child = VisualTreeHelper.GetChild(parent, i);
-                if (child is T typedChild && typedChild.Name == name)
-                {
-                    return typedChild;
-                }
-                T? childResult = FindChild<T>(child, name);
-                if (childResult != null) return childResult;
-            }
-            return null;
+            MainFrame.GoBack();
         }
     }
-}
-                T? childResult = FindChild<T>(child, name);
-                if (childResult != null) return childResult;
-            }
-            return null;
+
+    private void NavView_ItemInvoked(NavigationView sender, NavigationViewItemInvokedEventArgs args)
+    {
+        if (args.InvokedItemContainer is not NavigationViewItem selectedItem)
+            return;
+
+        string? tag = selectedItem.Tag?.ToString();
+
+        Logger.Info($"导航到页面: {tag}", "MainWindow");
+
+        MainFrame.ContentTransitions = null;
+
+        Type? pageType = tag switch
+        {
+            "Home"          => typeof(Pages.HomePage),
+            "Compress"      => typeof(Pages.CompressPage),
+            "Extract"       => typeof(Pages.ExtractPage),
+            "FileExplorer"  => typeof(Pages.FilesPage),
+            "Archive"       => typeof(Pages.ArchivePage),
+            "Settings"      => typeof(Pages.SettingsPage),
+            _               => null,
+        };
+
+        if (pageType != null)
+        {
+            MainFrame.Navigate(pageType);
+        }
+        else
+        {
+            Logger.Warn($"未知导航标签: {tag}", "MainWindow");
         }
     }
 }

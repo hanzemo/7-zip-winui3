@@ -2,132 +2,183 @@
 //
 // HomePage.xaml.cs
 
+using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using CommunityToolkit.Mvvm.Messaging;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using System;
 using System.Collections.ObjectModel;
 using System.IO;
 using System.Threading.Tasks;
-using Windows.Storage;
 using Windows.Storage.Pickers;
 
-namespace SevenZipApp.Pages
+namespace SevenZipApp.Pages;
+
+public sealed partial class HomePage : Page
 {
-    public sealed partial class HomePage : Page
+    public HomeViewModel ViewModel { get; } = new();
+
+    public HomePage()
     {
-        public HomeViewModel ViewModel { get; } = new();
+        this.InitializeComponent();
+        this.DataContext = ViewModel;
 
-        public HomePage()
+        Logger.Info("HomePage 初始化完成", "HomePage");
+    }
+
+    private void ArchiveGridView_ItemClick(object sender, ItemClickEventArgs e)
+    {
+        if (e.ClickedItem is not ArchiveItem selectedItem)
+            return;
+
+        Logger.Info($"选择归档：{selectedItem.Name}", "HomePage");
+        ViewModel.SelectedArchive = selectedItem;
+        ViewModel.StatusMessage = $"已选择：{selectedItem.Name}";
+    }
+
+    private void Open_Click(object sender, RoutedEventArgs e)
+    {
+        ViewModel.OpenCommand.Execute(null);
+    }
+
+    private void Refresh_Click(object sender, RoutedEventArgs e)
+    {
+        ViewModel.RefreshCommand.Execute(null);
+    }
+
+    private void Extract_Click(object sender, RoutedEventArgs e)
+    {
+        ViewModel.ExtractToFolderCommand.Execute(null);
+    }
+}
+
+public class HomeViewModel : ObservableObject
+{
+    [ObservableProperty]
+    private ObservableCollection<ArchiveItem> archiveItems = new();
+
+    [ObservableProperty]
+    private string statusMessage = "准备就绪";
+
+    [ObservableProperty]
+    private ArchiveItem? selectedArchive;
+
+    private readonly string[] _recentDirs =
+    {
+        Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory),
+        Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments),
+        Environment.GetFolderPath(Environment.SpecialFolder.Downloads),
+    };
+
+    [RelayCommand]
+    private async Task Open()
+    {
+        Logger.Info("打开压缩包选择器", "HomeViewModel");
+
+        var picker = new FileOpenPicker
         {
-            this.InitializeComponent();
-            this.DataContext = ViewModel;
+            ViewMode = PickerViewMode.List,
+            SuggestedStartLocation = PickerLocationId.DocumentsLibrary,
+        };
+        foreach (var ext in new[] { ".7z", ".zip", ".rar", ".tar", ".gz", ".bz2", ".xz" })
+            picker.FileTypeFilter.Add(ext);
 
-            Logger.Info("HomePage 初始化完成", "HomePage");
-        }
+        var file = await picker.PickSingleFileAsync();
+        if (file == null) return;
 
-        private void ArchiveGridView_Loaded(object sender, RoutedEventArgs e)
+        string path = file.Path;
+        Logger.Info($"打开压缩包：{path}", "HomeViewModel");
+
+        try
         {
-            ViewModel.LoadRecentArchives();
-        }
+            var engine = new SevenZipEngine();
+            var items = await Task.Run(() => engine.ListArchive(path));
 
-        private void ArchiveGridView_ItemClick(object sender, ItemClickEventArgs e)
-        {
-            var selectedItem = e.ClickedItem as ArchiveItem;
-            if (selectedItem != null)
+            SelectedArchive = new ArchiveItem
             {
-                Logger.Info($"选择归档：{selectedItem.Name}", "HomePage");
-                var frame = this.FindControl<Frame>(this.Content, "MainFrame");
-                if (frame != null)
-                {
-                    frame.Navigate(typeof(FilesPage), selectedItem);
-                }
-            }
+                Name = Path.GetFileName(path),
+                Count = items.Count,
+                Path = path,
+            };
+            StatusMessage = $"已加载：{items.Count} 个项目";
+            Logger.Info($"已加载 {items.Count} 个项目", "HomeViewModel");
         }
-
-        private void Refresh_Click(object sender, RoutedEventArgs e)
+        catch (Exception ex)
         {
-            ViewModel.RefreshCommand.Execute(null);
-        }
-
-        private T? FindChild<T>(DependencyObject parent, string name) where T : DependencyObject
-        {
-            if (parent == null) return null;
-            int count = VisualTreeHelper.GetChildCount(parent);
-            for (int i = 0; i < count; i++)
-            {
-                DependencyObject child = VisualTreeHelper.GetChild(parent, i);
-                if (child is T tchild && tchild.Name == name)
-                    return tchild;
-                var result = FindChild<T>(child, name);
-                if (result != null) return result;
-            }
-            return null;
+            StatusMessage = $"打开失败：{ex.Message}";
+            Logger.Error($"打开压缩包失败：{ex.Message}", "HomeViewModel");
         }
     }
 
-    public class HomeViewModel : ObservableObject
+    [RelayCommand]
+    private async Task ExtractToFolder()
     {
-        [ObservableProperty]
-        private ObservableCollection<ArchiveItem> archiveItems = new();
-
-        [ObservableProperty]
-        private string statusMessage = "准备就绪";
-
-        [RelayCommand]
-        private async Task Open(string path)
+        if (SelectedArchive == null)
         {
-            Logger.Info($"打开压缩包：{path}", "HomeViewModel");
+            StatusMessage = "请先打开一个压缩包";
+            return;
+        }
+
+        Logger.Info($"解压到文件夹：{SelectedArchive.Path}", "HomeViewModel");
+
+        var picker = new FolderPicker();
+        var folder = await picker.PickSingleFolderAsync();
+        if (folder == null) return;
+
+        try
+        {
+            var engine = new SevenZipEngine();
+            StatusMessage = "正在解压...";
+            await Task.Run(() => engine.Extract(SelectedArchive.Path!, folder.Path, null, null, System.Threading.CancellationToken.None));
+            StatusMessage = $"解压完成：{folder.Path}";
+        }
+        catch (Exception ex)
+        {
+            StatusMessage = $"解压失败：{ex.Message}";
+            Logger.Error($"解压失败：{ex.Message}", "HomeViewModel");
+        }
+    }
+
+    [RelayCommand]
+    private void Refresh()
+    {
+        LoadRecentArchives();
+    }
+
+    private void LoadRecentArchives()
+    {
+        ArchiveItems.Clear();
+
+        foreach (var dir in _recentDirs)
+        {
+            if (string.IsNullOrEmpty(dir) || !Directory.Exists(dir))
+                continue;
+
             try
             {
-                var engine = new SevenZipEngine();
-                var items = engine.ListArchive(path);
-                var item = new ArchiveItem
+                foreach (var ext in new[] { "*.7z", "*.zip", "*.rar", "*.tar.gz" })
                 {
-                    Name = Path.GetFileName(path),
-                    Count = items.Count,
-                    Path = path
-                };
-                SelectArchive(item);
-                StatusMessage = $"已加载：{items.Count} 个项目";
+                    foreach (var file in Directory.EnumerateFiles(dir, ext))
+                    {
+                        var info = new FileInfo(file);
+                        ArchiveItems.Add(new ArchiveItem
+                        {
+                            Name = info.Name,
+                            Path = file,
+                            Size = (uint)info.Length,
+                        });
+                    }
+                }
             }
             catch (Exception ex)
             {
-                StatusMessage = $"打开失败：{ex.Message}";
-                Logger.Error($"打开压缩包失败：{ex.Message}", "HomeViewModel");
+                Logger.Warn($"扫描 {dir} 失败：{ex.Message}", "HomeViewModel");
             }
         }
 
-        [RelayCommand]
-        private async Task ExtractToFolder()
-        {
-            Logger.Info($"解压到文件夹操作", "HomeViewModel");
-            var picker = new FolderPicker();
-            var folder = await picker.PickSingleFolderAsync();
-            if (folder != null)
-            {
-                StatusMessage = $"正在解压到：{folder.Path}...";
-                // await 实现
-            }
-        }
-
-        public void LoadRecentArchives()
-        {
-            Logger.Info("加载最近归档", "HomeViewModel");
-            // 实现
-        }
-
-        public void Refresh()
-        {
-            Logger.Info("刷新操作", "HomeViewModel");
-            LoadRecentArchives();
-        }
-
-        public void SelectArchive(ArchiveItem item)
-        {
-            Logger.Info($"选择归档：{item.Name}", "HomeViewModel");
-            // 导航
-        }
+        StatusMessage = $"共发现 {ArchiveItems.Count} 个压缩包";
     }
+
+    // 供 XAML Loaded 事件或页面首次显示时调用。
+    public void LoadRecent() => LoadRecentArchives();
 }

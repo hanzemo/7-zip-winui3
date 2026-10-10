@@ -14,65 +14,58 @@ SPDX-License-Identifier: GPL-2.0-or-later
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
         <CommandBar Grid.Row="0" DefaultLabelPosition="Right" Padding="8,0,8,0">
-            <AppBarButton Icon="OpenFile" Label="打开">
-                <AppBarButton.Flyout>
-                    <Flyout>
-                        <StackPanel>
-                            <TextBox x:Name="LatestArchivePath" PlaceholderText="输入压缩包路径" Margin="0,0,0,8"/>
-                            <Button Content="打开" FontWeight="Bold" Command="{x:Bind ViewModel.OpenCommand}"/>
-                            <ComboBox ItemsSource="{x:Bind ViewModel.RecentArchives}" DisplayMemberPath="Name" SelectionChanged="RecentCompressedChanged"/>
-                        </StackPanel>
-                    </Flyout>
-                </AppBarButton.Flyout>
-            </AppBarButton>
+            <AppBarButton Icon="OpenFile" Label="打开" Click="Open_Click"/>
             <AppBarButton Icon="Refresh" Label="刷新" Click="Refresh_Click"/>
-            <AppBarButton Icon="Open" Label="解压到" Command="{x:Bind ViewModel.ExtractToFolderCommand}"/>
+            <AppBarButton Icon="Open" Label="解压到" Click="Extract_Click"/>
         </CommandBar>
 
-        <Grid Grid.Row="1">
-            <GridView x:Name="ArchiveGridView"
-                      ItemsSource="{x:Bind ViewModel.ArchiveItems}"
-                      SelectionMode="Single"
-                      ItemClick="ArchiveGridView_ItemClick"
-                      Loaded="ArchiveGridView_Loaded">
-                <GridView.ItemsPanel>
-                    <ItemsPanelTemplate>
-                        <ItemsWrapGrid Orientation="Horizontal" MaximumRowsOrColumns="4"/>
-                    </ItemsPanelTemplate>
-                </GridView.ItemsPanel>
-                <GridView.ItemTemplate>
-                    <DataTemplate>
-                        <StackPanel HorizontalAlignment="Center" VerticalAlignment="Top">
-                            <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
-                                    Padding="16,16,16,16"
-                                    CornerRadius="8">
-                                <Grid>
-                                    <StackPanel>
-                                        <TextBlock Text="{x:Bind Name}"
-                                                   TextWrapping="Wrap"
-                                                   MaxWidth="200"
-                                                   TextTrimming="CharacterEllipsis"
-                                                   FontSize="14"
-                                                   FontWeight="SemiBold"
-                                                   Margin="0,0,0,8"/>
-                                        <TextBlock Text="{x:Bind Count}"
-                                                   FontSize="12"
-                                                   Foreground="{ThemeResource TextFillColorSecondary}"/>
-                                    </StackPanel>
-                                </Grid>
-                            </Border>
-                        </StackPanel>
-                    </DataTemplate>
-                </GridView.ItemTemplate>
-            </GridView>
-        </Grid>
+        <GridView Grid.Row="1"
+                  x:Name="ArchiveGridView"
+                  ItemsSource="{x:Bind ViewModel.ArchiveItems, Mode=OneWay}"
+                  SelectionMode="Single"
+                  ItemClick="ArchiveGridView_ItemClick"
+                  IsItemClickEnabled="True"
+                  Padding="16">
+            <GridView.ItemsPanel>
+                <ItemsPanelTemplate>
+                    <ItemsWrapGrid Orientation="Horizontal"/>
+                </ItemsPanelTemplate>
+            </GridView.ItemsPanel>
+            <GridView.ItemTemplate>
+                <DataTemplate>
+                    <StackPanel HorizontalAlignment="Center" VerticalAlignment="Top">
+                        <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                                Padding="16,16,16,16"
+                                CornerRadius="8"
+                                Margin="8">
+                            <StackPanel HorizontalAlignment="Center">
+                                <TextBlock Text="{x:Bind Name, Mode=OneWay}"
+                                           TextWrapping="Wrap"
+                                           MaxWidth="200"
+                                           TextTrimming="CharacterEllipsis"
+                                           FontSize="14"
+                                           FontWeight="SemiBold"
+                                           Margin="0,0,0,8"
+                                           HorizontalAlignment="Center"/>
+                                <TextBlock Text="{x:Bind Count, Mode=OneWay, StringFormat='{}{0} 个条目'}"
+                                           FontSize="12"
+                                           Foreground="{ThemeResource TextFillColorSecondary}"
+                                           HorizontalAlignment="Center"/>
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+                </DataTemplate>
+            </GridView.ItemTemplate>
+        </GridView>
 
         <TextBlock Grid.Row="2"
+                   x:Name="StatusTextBlock"
                    Foreground="{ThemeResource TextFillColorPrimary}"
-                   Text="{x:Bind ViewModel.StatusMessage}"
+                   Text="{x:Bind ViewModel.StatusMessage, Mode=OneWay}"
                    Padding="8,8,8,8"/>
 
     </Grid>

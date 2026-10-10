@@ -6,90 +6,160 @@ using CommunityToolkit.Mvvm.Input;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
+using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Windows.Storage.Pickers;
 
-namespace SevenZipApp.Pages
+namespace SevenZipApp.Pages;
+
+public sealed partial class CompressPage : Page
 {
-    public sealed partial class CompressPage : Page
+    private readonly List<string> _files = new();
+
+    public CompressPage()
     {
-        private CompressViewModel _viewModel = new CompressViewModel();
+        this.InitializeComponent();
 
-        public CompressPage()
+        Logger.Info("CompressPage 初始化完成", "CompressPage");
+    }
+
+    private async void SelectFiles_Click(object sender, RoutedEventArgs e)
+    {
+        var picker = new FileOpenPicker
         {
-            this.InitializeComponent();
-            this.DataContext = _viewModel;
+            ViewMode = PickerViewMode.List,
+            SuggestedStartLocation = PickerLocationId.DocumentsLibrary,
+        };
+        picker.FileTypeFilter.Add("*");
 
-            Logger.Info("CompressPage 初始化完成", "CompressPage");
-        }
+        var files = await picker.PickMultipleFilesAsync();
+        if (files == null || files.Count == 0) return;
 
-        private async void SelectFiles_Click(object sender, RoutedEventArgs e)
+        _files.Clear();
+        foreach (var f in files)
+            _files.Add(f.Path);
+
+        FilesText.Text = string.Join(Environment.NewLine, _files);
+        Logger.Info($"选择了 {files.Count} 个文件", "CompressPage");
+    }
+
+    private async void SelectOutput_Click(object sender, RoutedEventArgs e)
+    {
+        var picker = new FileSavePicker
         {
-            Logger.Info("打开文件选择器", "CompressPage");
-            var picker = new FileOpenPicker();
-            picker.ViewMode = PickerViewMode.List;
-            picker.FileTypeFilter.Add("*");
-            var files = await picker.PickMultipleFilesAsync();
-            if (files != null)
-            {
-                _viewModel.Files = new ObservableCollection<string>();
-                foreach (var f in files)
-                {
-                    _viewModel.Files.Add(f.Path);
-                }
-                Logger.Info($"选择了 {files.Count} 个文件", "CompressPage");
-            }
-        }
+            SuggestedStartLocation = PickerLocationId.DocumentsLibrary,
+        };
+        picker.SuggestedFileName = "archive";
+        picker.FileTypeChoices.Add("7z", new[] { ".7z" });
+        picker.FileTypeChoices.Add("zip", new[] { ".zip" });
+        picker.FileTypeChoices.Add("tar", new[] { ".tar" });
+        picker.FileTypeChoices.Add("gz", new[] { ".gz" });
+        picker.FileTypeChoices.Add("bz2", new[] { ".bz2" });
+        picker.FileTypeChoices.Add("xz", new[] { ".xz" });
 
-        private async void Compress_Click(object sender, RoutedEventArgs e)
+        var file = await picker.PickSaveFileAsync();
+        if (file != null)
         {
-            Logger.Info("开始压缩操作", "CompressPage");
-            try
-            {
-                // TODO: 实现压缩逻辑
-                Logger.Info("压缩操作提示：这里需要实现真实的压缩功能", "CompressPage");
-            }
-            catch (Exception ex)
-            {
-                Logger.Error($"压缩失败：{ex.Message}", "CompressPage");
-            }
-        }
-
-        private void Cancel_Click(object sender, RoutedEventArgs e)
-        {
-            Logger.Info("取消压缩", "CompressPage");
-            this.NavigateBack();
-        }
-
-        private void NavigateBack()
-        {
-            // 返回上一页
+            OutputPath.Text = file.Path;
         }
     }
 
-    public class CompressViewModel : ObservableObject
+    private async void Compress_Click(object sender, RoutedEventArgs e)
     {
-        [ObservableProperty]
-        private ObservableCollection<string> files;
+        if (_files.Count == 0)
+        {
+            StatusTextBlock.Text = "请先选择要压缩的文件";
+            return;
+        }
 
-        [ObservableProperty]
-        private string outputPath = "archive.7z";
+        var outputPath = OutputPath.Text;
+        if (string.IsNullOrWhiteSpace(outputPath))
+        {
+            StatusTextBlock.Text = "请指定输出路径";
+            return;
+        }
 
-        [ObservableProperty]
-        private string statusMessage = "准备压缩";
+        var options = BuildOptions();
 
-        [ObservableProperty]
-        private CompressionLevel compressionLevel = CompressionLevel.Normal;
+        StatusTextBlock.Text = "正在压缩...";
+        Logger.Info($"开始压缩 {_files.Count} 个文件 -> {outputPath}", "CompressPage");
 
-        [ObservableProperty]
-        private bool solid = true;
+        try
+        {
+            var engine = new SevenZipEngine();
+            await Task.Run(() => engine.Compress(options, outputPath, null, CancellationToken.None));
+            StatusTextBlock.Text = $"压缩完成：{Path.GetFileName(outputPath)}";
+            Logger.Info("压缩操作完成", "CompressPage");
+        }
+        catch (Exception ex)
+        {
+            StatusTextBlock.Text = $"压缩失败：{ex.Message}";
+            Logger.Error($"压缩失败：{ex.Message}", "CompressPage");
+        }
+    }
 
-        [ObservableProperty]
-        private bool multiThreaded = true;
+    private CompressionOptions BuildOptions()
+    {
+        string formatContent = FormatCombo.SelectedItem is ComboBoxItem fmtItem ? fmtItem.Content?.ToString() ?? "7z" : "7z";
+        var format = formatContent?.ToLowerInvariant() switch
+        {
+            "zip" => OutputFormat.Zip,
+            "tar" => OutputFormat.Tar,
+            "gz"  => OutputFormat.GZip,
+            "bz2" => OutputFormat.BZip2,
+            "xz"  => OutputFormat.XZ,
+            _     => OutputFormat.SevenZip,
+        };
 
-        [ObservableProperty]
-        private bool encrypt;
+        string levelContent = CompressionLevel.SelectedItem is ComboBoxItem lvItem
+            ? lvItem.Content?.ToString() ?? "5 - 正常"
+            : "5 - 正常";
+        var level = ParseCompressionLevel(levelContent);
+
+        return new CompressionOptions
+        {
+            Format = format,
+            Level  = level,
+            Solid          = SolidCheck.IsChecked == true,
+            MultiThreaded  = MultiThreadCheck.IsChecked == true,
+            Encrypt        = EncryptCheck.IsChecked == true,
+            Password       = EncryptCheck.IsChecked == true ? PasswordBox.Password : null,
+            SourceFiles    = _files.ToList(),
+        };
+    }
+
+    private static CompressionLevel ParseCompressionLevel(string? text)
+    {
+        // ComboBox 项内容形如 "5 - 正常"，取第一段数字。
+        if (string.IsNullOrEmpty(text))
+            return CompressionLevel.Normal;
+
+        var parts = text.Split('-', 2);
+        if (parts.Length > 0 && int.TryParse(parts[0].Trim(), out int n))
+        {
+            return n switch
+            {
+                0 => CompressionLevel.Store,
+                1 => CompressionLevel.Fastest,
+                3 => CompressionLevel.Fast,
+                5 => CompressionLevel.Normal,
+                7 => CompressionLevel.Maximum,
+                9 => CompressionLevel.Ultra,
+                _ => CompressionLevel.Normal,
+            };
+        }
+        return CompressionLevel.Normal;
+    }
+
+    private void Cancel_Click(object sender, RoutedEventArgs e)
+    {
+        Logger.Info("取消压缩", "CompressPage");
+        _files.Clear();
+        FilesText.Text = string.Empty;
+        StatusTextBlock.Text = "已取消";
     }
 }

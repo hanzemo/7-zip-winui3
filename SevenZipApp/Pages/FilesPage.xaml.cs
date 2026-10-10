@@ -2,210 +2,190 @@
 //
 // FilesPage.xaml.cs
 
+using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
-using SevenZipApp.Interop;
 using System;
 using System.Collections.ObjectModel;
 using System.IO;
-using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
-using Windows.Storage;
 using Windows.Storage.Pickers;
 
-namespace SevenZipApp.Pages
+namespace SevenZipApp.Pages;
+
+public sealed partial class FilesPage : Page
 {
-    public sealed partial class FilesPage : Page
+    public ArchiveListViewModel ViewModel { get; } = new();
+
+    public FilesPage()
     {
-        private ArchiveListViewModel _viewModel = new ArchiveListViewModel();
+        this.InitializeComponent();
+        this.DataContext = ViewModel;
 
-        public FilesPage()
+        Logger.Info("FilesPage 初始化完成", "FilesPage");
+    }
+
+    private void Back_Click(object sender, RoutedEventArgs e)
+    {
+        Logger.Warn("Back button clicked", "FilesPage");
+        var frame = FindMainFrame();
+        if (frame != null && frame.CanGoBack)
         {
-            this.InitializeComponent();
-            this.DataContext = _viewModel;
-
-            Logger.Info("FilesPage 初始化完成", "FilesPage");
-        }
-
-        private void Back_Click(object sender, RoutedEventArgs e)
-        {
-            Logger.Warn("Back button clicked", "FilesPage");
-            var frame = this.FindChild<Frame>(this.Parent, "MainFrame");
-            if (frame != null && frame.CanGoBack)
-            {
-                frame.GoBack();
-            }
-        }
-
-        private void Refresh_Click(object sender, RoutedEventArgs e)
-        {
-            _viewModel.RefreshCommand.Execute(null);
-        }
-
-        private void Extract_Click(object sender, RoutedEventArgs e)
-        {
-            _viewModel.ExtractCommand.Execute(null);
-        }
-
-        private void FilesGridView_ItemClick(object sender, ItemClickEventArgs e)
-        {
-            var selectedItem = e.ClickedItem as ArchiveItem;
-            if (selectedItem != null && !selectedItem.IsFolder)
-            {
-                _viewModel.ExtractItemSelectedCommand.Execute(selectedItem);
-            }
-            else if (selectedItem != null && selectedItem.IsFolder)
-            {
-                Logger.Warn("正在点击文件夹", "FilesPage");
-                StatusTextBlock.Text = "进入文件夹功能暂未实现";
-            }
-        }
-
-        private T? FindChild<T>(DependencyObject parent, string name) where T : DependencyObject
-        {
-            if (parent == null) return null;
-            int childCount = VisualTreeHelper.GetChildCount(parent);
-            for (int i = 0; i < childCount; i++)
-            {
-                DependencyObject child = VisualTreeHelper.GetChild(parent, i);
-                if (child is T typedChild && typedChild.Name == name)
-                {
-                    return typedChild;
-                }
-                T? result = FindChild<T>(child, name);
-                if (result != null) return result;
-            }
-            return null;
+            frame.GoBack();
         }
     }
 
-    public class ArchiveListViewModel
+    private void Refresh_Click(object sender, RoutedEventArgs e)
     {
-        public ArchiveListViewModel()
+        ViewModel.RefreshCommand.Execute(null);
+    }
+
+    private void Extract_Click(object sender, RoutedEventArgs e)
+    {
+        ViewModel.ExtractCommand.Execute(null);
+    }
+
+    private void FilesListView_ItemClick(object sender, ItemClickEventArgs e)
+    {
+        if (e.ClickedItem is not ArchiveItem selectedItem)
+            return;
+
+        if (selectedItem.IsFolder)
         {
-            Items = new ObservableCollection<ArchiveItem>();
-            StatusMessage = "请选择一个压缩包";
-            _selectedArchivePath = string.Empty;
+            StatusTextBlock.Text = "进入文件夹功能暂未实现";
+            Logger.Warn("正在点击文件夹", "FilesPage");
+            return;
         }
 
-        [ObservableProperty]
-        private ObservableCollection<ArchiveItem> items;
+        ViewModel.ExtractItemSelectedCommand.Execute(selectedItem);
+    }
 
-        [ObservableProperty]
-        private int totalCount;
-
-        [ObservableProperty]
-        private string statusMessage;
-
-        [ObservableProperty]
-        private string _selectedArchivePath;
-
-        [RelayCommand]
-        private async Task Extract()
+    private Frame? FindMainFrame()
+    {
+        var parent = this.Parent as DependencyObject;
+        while (parent != null)
         {
-            var savePicker = new FolderPicker();
-            savePicker.FileTypeFilter.Add("*");
-            string? folderPath = await savePicker.PickSingleFolderAsync();
-            if (folderPath != null)
-            {
-                StatusMessage = "开始解压...";
-                try
-                {
-                    var engine = new SevenZipEngine();
-                    await Task.Run(() => engine.Extract(_selectedArchivePath, folderPath, null, null, new CancellationToken()));
-                    StatusMessage = "解压完成!";
-                }
-                catch (Exception ex)
-                {
-                    StatusMessage = $"解压失败: {ex.Message}";
-                }
-            }
+            if (parent is Frame f && f.Name == "MainFrame")
+                return f;
+            parent = VisualTreeHelper.GetParent(parent);
         }
-                TotalCount = items.Count;
-                StatusMessage = $"显示 {items.Count} 个项目";
-                Logger.Info($"刷新完成：{items.Count} 个项目", "ArchiveListViewModel");
-            }
-            catch (Exception ex)
-            {
-                StatusMessage = $"刷新失败：{ex.Message}";
-                Logger.Error($"刷新失败：{ex.Message}", "ArchiveListViewModel");
-            }
+        return null;
+    }
+}
+
+public class ArchiveListViewModel : ObservableObject
+{
+    private string _selectedArchivePath = string.Empty;
+
+    [ObservableProperty]
+    private ObservableCollection<ArchiveItem> items = new();
+
+    [ObservableProperty]
+    private int totalCount;
+
+    [ObservableProperty]
+    private string statusMessage = "请选择一个压缩包";
+
+    [RelayCommand]
+    private async Task Refresh()
+    {
+        if (string.IsNullOrEmpty(_selectedArchivePath))
+        {
+            StatusMessage = "未选择压缩包";
+            Logger.Warn("刷新时未选择压缩包", "ArchiveListViewModel");
+            return;
         }
 
-        [RelayCommand]
-        private async Task Extract()
+        StatusMessage = "刷新中...";
+        Logger.Info($"刷新归档内容：{_selectedArchivePath}", "ArchiveListViewModel");
+
+        try
         {
-            Logger.Info($"解压整个归档：{_selectedArchivePath}", "ArchiveListViewModel");
-            var savePicker = new FolderPicker();
-            savePicker.FileTypeFilter.Add("*");
-            string? folderPath = await savePicker.PickSingleFolderAsync();
-            if (folderPath != null)
-            {
-                StatusMessage = "开始解压...";
-                try
-                {
-                    var engine = new SevenZipEngine();
-                    await Task.Run(() => engine.Extract(_selectedArchivePath, folderPath, null, null, new CancellationToken()));
-                    StatusMessage = "解压完成!";
-                    Logger.Info("解压完成", "ArchiveListViewModel");
-                }
-                catch (Exception ex)
-                {
-                    StatusMessage = $"解压失败：{ex.Message}";
-                    Logger.Error($"解压失败：{ex.Message}", "ArchiveListViewModel");
-                }
-            }
+            var engine = new SevenZipEngine();
+            var items = await Task.Run(() => engine.ListArchive(_selectedArchivePath));
+
+            Items.Clear();
+            foreach (var item in items)
+                Items.Add(item);
+
+            TotalCount = items.Count;
+            StatusMessage = $"显示 {items.Count} 个项目";
+            Logger.Info($"刷新完成：{items.Count} 个项目", "ArchiveListViewModel");
+        }
+        catch (Exception ex)
+        {
+            StatusMessage = $"刷新失败：{ex.Message}";
+            Logger.Error($"刷新失败：{ex.Message}", "ArchiveListViewModel");
+        }
+    }
+
+    [RelayCommand]
+    private async Task Extract()
+    {
+        if (string.IsNullOrEmpty(_selectedArchivePath))
+        {
+            StatusMessage = "未选择压缩包";
+            return;
         }
 
-        [RelayCommand]
-        private async Task ExtractItemSelected()
+        Logger.Info($"解压整个归档：{_selectedArchivePath}", "ArchiveListViewModel");
+
+        var savePicker = new FolderPicker();
+        var folder = await savePicker.PickSingleFolderAsync();
+        if (folder == null) return;
+
+        StatusMessage = "开始解压...";
+        try
         {
-            var selectedItem = Items.FirstOrDefault() as ArchiveItem;
-            if (selectedItem != null && !selectedItem.IsFolder)
-            {
-                var savePicker = new FolderPicker();
-                savePicker.FileTypeFilter.Add("*");
-                string? folderPath = await savePicker.PickSingleFolderAsync();
-                if (folderPath != null)
-                {
-                    StatusMessage = "解压单个项目...";
-                    Logger.Info($"解压单个文件：{selectedItem.Name}", "ArchiveListViewModel");
-                    try
-                    {
-                        // TODO: 实现单文件解压
-                        StatusMessage = "解压完成!";
-                    }
-                    catch (Exception ex)
-                    {
-                        StatusMessage = $"解压失败：{ex.Message}";
-                        Logger.Error($"解压单个文件失败：{ex.Message}", "ArchiveListViewModel");
-                    }
-                }
-            }
-            else
-            {
-                Logger.Warn("未选择文件或选择文件夹", "ArchiveListViewModel");
-                StatusMessage = "请选择文件";
-            }
+            var engine = new SevenZipEngine();
+            await Task.Run(() => engine.Extract(_selectedArchivePath, folder.Path, null, null, CancellationToken.None));
+            StatusMessage = $"解压完成：{folder.Path}";
+            Logger.Info("解压完成", "ArchiveListViewModel");
+        }
+        catch (Exception ex)
+        {
+            StatusMessage = $"解压失败：{ex.Message}";
+            Logger.Error($"解压失败：{ex.Message}", "ArchiveListViewModel");
+        }
+    }
+
+    [RelayCommand]
+    private async Task ExtractItemSelected(ArchiveItem? item)
+    {
+        if (item == null || item.IsFolder)
+        {
+            Logger.Warn("未选择文件或选择文件夹", "ArchiveListViewModel");
+            StatusMessage = "请选择文件";
+            return;
         }
 
-        public void SetArchivePath(string archivePath)
-        {
-            Logger.Info($"设置归档路径：{archivePath}", "ArchiveListViewModel");
-            StatusMessage = "加载中...";
-            _selectedArchivePath = archivePath;
-            RefreshCommand.Execute(null);
-        }
+        var savePicker = new FolderPicker();
+        var folder = await savePicker.PickSingleFolderAsync();
+        if (folder == null) return;
 
-        public async Task NavigateToFolder(ArchiveItem folder)
+        StatusMessage = "解压单个项目...";
+        Logger.Info($"解压单个文件：{item.Name}", "ArchiveListViewModel");
+
+        try
         {
-            if (folder.IsFolder)
-            {
-                Logger.Info($"进入文件夹：{folder.Name}", "ArchiveListViewModel");
-                StatusMessage = $"进入 {folder.Name}";
-                // TODO: 实现文件夹导航
-            }
+            var engine = new SevenZipEngine();
+            await Task.Run(() => engine.Extract(_selectedArchivePath, folder.Path, null, null, CancellationToken.None));
+            StatusMessage = $"解压完成：{folder.Path}";
         }
+        catch (Exception ex)
+        {
+            StatusMessage = $"解压失败：{ex.Message}";
+            Logger.Error($"解压单个文件失败：{ex.Message}", "ArchiveListViewModel");
+        }
+    }
+
+    public void SetArchivePath(string archivePath)
+    {
+        Logger.Info($"设置归档路径：{archivePath}", "ArchiveListViewModel");
+        StatusMessage = "加载中...";
+        _selectedArchivePath = archivePath;
+        _ = RefreshCommand.ExecuteAsync(null);
     }
 }

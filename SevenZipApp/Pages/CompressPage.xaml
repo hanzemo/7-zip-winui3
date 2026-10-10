@@ -30,28 +30,52 @@ SPDX-License-Identifier: GPL-2.0-or-later
                         <ColumnDefinition Width="*"/>
                         <ColumnDefinition Width="Auto"/>
                     </Grid.ColumnDefinitions>
-                    <TextBox Grid.Column="0" PlaceholderText="已选择文件" IsReadOnly="True"/>
+                    <TextBox Grid.Column="0"
+                             x:Name="FilesText"
+                             PlaceholderText="未选择文件"
+                             IsReadOnly="True"/>
                     <Button Grid.Column="1" Content="选择文件" Click="SelectFiles_Click" Margin="8,0,0,0"/>
                 </Grid>
 
-                <TextBlock Text="输出文件名" Style="{StaticResource SubtitleTextBlockStyle}" Margin="0,0,0,8"/>
-                <TextBox x:Name="OutputPath" PlaceholderText="例如：archive.7z" Margin="0,0,0,16"/>
+                <TextBlock Text="输出路径" Style="{StaticResource SubtitleTextBlockStyle}" Margin="0,0,0,8"/>
+                <Grid Margin="0,0,0,16">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <TextBox Grid.Column="0"
+                             x:Name="OutputPath"
+                             PlaceholderText="例如：C:\backup\archive.7z"/>
+                    <Button Grid.Column="1" Content="另存为..." Click="SelectOutput_Click" Margin="8,0,0,0"/>
+                </Grid>
+
+                <TextBlock Text="压缩格式" Style="{StaticResource SubtitleTextBlockStyle}" Margin="0,0,0,8"/>
+                <ComboBox x:Name="FormatCombo" Margin="0,0,0,16">
+                    <ComboBoxItem Content="7z" IsSelected="True"/>
+                    <ComboBoxItem Content="zip"/>
+                    <ComboBoxItem Content="tar"/>
+                    <ComboBoxItem Content="gz"/>
+                    <ComboBoxItem Content="bz2"/>
+                    <ComboBoxItem Content="xz"/>
+                </ComboBox>
 
                 <TextBlock Text="压缩级别" Style="{StaticResource SubtitleTextBlockStyle}" Margin="0,0,0,8"/>
                 <ComboBox x:Name="CompressionLevel" Margin="0,0,0,16">
-                    < ComboBoxItem Content="0 - 存储"/>
-                    < ComboBoxItem Content="1 - 最快"/>
-                    < ComboBoxItem Content="3 - 快速"/>
-                    < ComboBoxItem Content="5 - 正常"/>
-                    < ComboBoxItem Content="7 - 最大"/>
-                    < ComboBoxItem Content="9 - 超压"/>
+                    <ComboBoxItem Content="0 - 存储"/>
+                    <ComboBoxItem Content="1 - 最快"/>
+                    <ComboBoxItem Content="3 - 快速"/>
+                    <ComboBoxItem Content="5 - 正常" IsSelected="True"/>
+                    <ComboBoxItem Content="7 - 最大"/>
+                    <ComboBoxItem Content="9 - 超压"/>
                 </ComboBox>
 
-                <ToggleSwitchContent Grid.Row="1" Content="固实压缩" IsOn="True" Margin="0,0,0,8"/>
-                <ToggleSwitchContent Grid.Row="2" Content="多线程压缩" IsOn="True" Margin="0,0,0,8"/>
-                <ToggleSwitchContent Grid.Row="3" Content="加密" IsOn="False" Margin="0,0,0,16"/>
+                <CheckBox x:Name="SolidCheck" IsChecked="True" Content="固实压缩" Margin="0,0,0,8"/>
+                <CheckBox x:Name="MultiThreadCheck" IsChecked="True" Content="多线程压缩" Margin="0,0,0,8"/>
 
-                <PasswordBox x:Name="Password" PlaceholderText="密码 (可选)" Margin="0,0,0,16" Visibility="Collapsed"/>
+                <CheckBox x:Name="EncryptCheck" IsChecked="False" Content="加密" Margin="0,8,0,8"/>
+                <PasswordBox x:Name="PasswordBox"
+                             PlaceholderText="密码 (可选)"
+                             Margin="0,0,0,16"/>
             </StackPanel>
         </ScrollViewer>
 

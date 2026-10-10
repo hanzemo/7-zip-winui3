@@ -2,7 +2,7 @@
 SPDX-License-Identifier: GPL-2.0-or-later
 -->
 <Window
-    x:Class="SevenZipApp.MainWindow"
+    x:Class="SevenZipApp.Views.MainWindow"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
@@ -11,9 +11,6 @@ SPDX-License-Identifier: GPL-2.0-or-later
     Width="1000"
     Height="700"
     Title="7-Zip WinUI3"
-    AppWindowTheme="Product"
-    TitleBar.IsExtensionPresent="True"
-    TitleBar.ExtendsContentIntoTitleBar="True"
     RequestedTheme="Light">
 
     <Grid>
@@ -23,20 +20,11 @@ SPDX-License-Identifier: GPL-2.0-or-later
         </Grid.RowDefinitions>
 
         <!-- 自定义标题栏带应用图标和名称 -->
-        <Grid Grid.Row="0" Name="TitleBarGrid" Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+        <Grid Grid.Row="0" x:Name="TitleBarGrid" Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*"/>
                 <ColumnDefinition Width="Auto"/>
             </Grid.ColumnDefinitions>
-
-            <!-- App Icon -->
-            <Image 
-                Source="/Assets/SevenZipWinUI.png" 
-                Grid.Column="0"
-                Height="28"
-                Width="28"
-                Margin="10,4,8,4" 
-                ToolTipService.ToolTip="7-Zip WinUI3"/>
 
             <!-- App Title -->
             <TextBlock 
@@ -71,9 +59,7 @@ SPDX-License-Identifier: GPL-2.0-or-later
                 <NavigationViewItem Icon="Settings" Content="设置" Tag="Settings"/>
             </NavigationView.FooterMenuItems>
 
-            <Frame x:Name="MainFrame">
-                <Frame.Navigate(typeof(Pages.HomePage));
-            </Frame>
+            <Frame x:Name="MainFrame"/>
 
         </NavigationView>
     </Grid>
