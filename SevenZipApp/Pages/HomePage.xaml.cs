@@ -52,7 +52,7 @@ public sealed partial class HomePage : Page
     }
 }
 
-public class HomeViewModel : ObservableObject
+public partial class HomeViewModel : ObservableObject
 {
     [ObservableProperty]
     private ObservableCollection<ArchiveItem> archiveItems = new();

@@ -68,7 +68,7 @@ public sealed partial class FilesPage : Page
     }
 }
 
-public class ArchiveListViewModel : ObservableObject
+public partial class ArchiveListViewModel : ObservableObject
 {
     private string _selectedArchivePath = string.Empty;
 
