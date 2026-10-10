@@ -60,7 +60,7 @@ SPDX-License-Identifier: GPL-2.0-or-later
                 </ComboBox>
 
                 <TextBlock Text="压缩级别" Style="{StaticResource SubtitleTextBlockStyle}" Margin="0,0,0,8"/>
-                <ComboBox x:Name="CompressionLevel" Margin="0,0,0,16">
+                <ComboBox x:Name="LevelCombo" Margin="0,0,0,16">
                     <ComboBoxItem Content="0 - 存储"/>
                     <ComboBoxItem Content="1 - 最快"/>
                     <ComboBoxItem Content="3 - 快速"/>

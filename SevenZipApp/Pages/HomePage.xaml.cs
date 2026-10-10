@@ -67,7 +67,7 @@ public partial class HomeViewModel : ObservableObject
     {
         Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory),
         Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments),
-        Environment.GetFolderPath(Environment.SpecialFolder.Downloads),
+        Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "Downloads"),
     };
 
     [RelayCommand]

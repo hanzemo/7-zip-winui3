@@ -39,15 +39,15 @@ public sealed class SevenZipEngine
                     Name       = Path.GetFileName(entry.FileName),
                     Path       = entry.FileName,
                     IsFolder   = entry.IsDirectory,
-                    Size       = Convert.ToUInt64(entry.Size ?? 0),
-                    PackedSize = Convert.ToUInt64(entry.PackedSize ?? 0),
+                    Size       = entry.Size,
+                    PackedSize = entry.CompressedSize,
                     Modified   = entry.LastWriteTime,
                     Encrypted  = entry.Encrypted,
                     Method     = entry.Method,
                 });
             }
         }
-        catch (SharpSevenZipException ex)
+        catch (SevenZipException ex)
         {
             throw new SevenZipException($"读取压缩文件失败：{ex.Message}", ex.HResult);
         }
@@ -78,7 +78,7 @@ public sealed class SevenZipEngine
 
             archive.ExtractArchive(destDir);
         }
-        catch (SharpSevenZipException ex)
+        catch (SevenZipException ex)
         {
             throw new SevenZipException($"解压失败：{ex.Message}", ex.HResult);
         }
@@ -136,7 +136,7 @@ public sealed class SevenZipEngine
                     // 密码可通过 compressor 的 Password 属性（若有）或自定义参数设置；
                     // 若未支持，则密码不会被使用。
                 }
-                compressor.CompressDirectory(dirs[0], outputFile, recursive: true);
+                compressor.CompressDirectory(dirs[0], outputFile);
                 return;
             }
 
@@ -166,9 +166,9 @@ public sealed class SevenZipEngine
                 ? firstSource
                 : Path.GetDirectoryName(firstSource)!;
 
-            compressor.CompressDirectory(baseDir, outputFile, recursive: true);
+            compressor.CompressDirectory(baseDir, outputFile);
         }
-        catch (SharpSevenZipException ex)
+        catch (SevenZipException ex)
         {
             throw new SevenZipException($"压缩失败：{ex.Message}", ex.HResult);
         }

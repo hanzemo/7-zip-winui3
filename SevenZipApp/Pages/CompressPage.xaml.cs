@@ -115,7 +115,7 @@ public sealed partial class CompressPage : Page
             _     => OutputFormat.SevenZip,
         };
 
-        string levelContent = CompressionLevel.SelectedItem is ComboBoxItem lvItem
+        string levelContent = LevelCombo.SelectedItem is ComboBoxItem lvItem
             ? lvItem.Content?.ToString() ?? "5 - 正常"
             : "5 - 正常";
         var level = ParseCompressionLevel(levelContent);
