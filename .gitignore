@@ -1,0 +1,17 @@
+[Bb]in/
+[Oo]bj/
+.vs/
+*.user
+*.suo
+*.pfx
+*.cer
+*.pfx.b64
+Packages/
+AppPackages/
+.vscode/
+.idea/
+*.swp
+.DS_Store
+._*
+*.nupkg
+packages/
