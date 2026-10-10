@@ -40,7 +40,6 @@ public sealed class SevenZipEngine
                     Path       = entry.FileName,
                     IsFolder   = entry.IsDirectory,
                     Size       = entry.Size,
-                    PackedSize = entry.CompressedSize,
                     Modified   = entry.LastWriteTime,
                     Encrypted  = entry.Encrypted,
                     Method     = entry.Method,
