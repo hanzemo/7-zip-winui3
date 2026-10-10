@@ -36,4 +36,9 @@
     </AppxManifest>
   </ItemGroup>
 
+
+  <ItemGroup>
+    <ApplicationDefinition Include="App.xaml" />
+  </ItemGroup>
+
 </Project>

@@ -3,8 +3,6 @@ name: Build
 on:
   push:
     branches: [ main, master ]
-  pull_request:
-    branches: [ main, master ]
   workflow_dispatch:
 
 jobs:
@@ -20,45 +18,24 @@ jobs:
         with:
           dotnet-version: '8.0.x'
 
+      - name: Setup MSBuild
+        uses: microsoft/setup-msbuild@v2
+
       - name: Restore
-        shell: pwsh
-        run: dotnet restore -v:quiet
+        run: msbuild SevenZipApp.sln /t:Restore /p:Configuration=Debug
 
       - name: Build
-        if: always()
         shell: pwsh
-        continue-on-error: true
         run: |
-          dotnet build `
-            --no-restore `
-            -c Debug `
-            -p:ErrorLimit=10000 `
-            -p:RunAnalyzers=false `
-            -v:quiet `
+          msbuild SevenZipApp.sln `
+            /t:Build `
+            /p:Configuration=Debug `
+            /p:Platform=x64 `
+            /v:detailed `
             2>&1 | Tee-Object -FilePath build.log
-          Write-Host "exit=$LASTEXITCODE"
 
-      - name: Show errors only
+      - name: Show XAML errors
         if: always()
         shell: pwsh
         run: |
-          Write-Host "===== 错误 ====="
-          Get-Content build.log |
-            Where-Object { $_ -match 'error|Error|FAILED|MSB\d{4}|XLS\d{4}|WMC\d{4}' } |
-            Select-Object -Unique
-
-      - name: Run XamlCompiler manually
-        if: always()
-        shell: pwsh
-        run: |
-          $input  = "SevenZipApp\obj\x64\Debug\net8.0-windows10.0.22621.0\input.json"
-          $output = "SevenZipApp\obj\x64\Debug\net8.0-windows10.0.22621.0\output.json"
-          $xamlc  = "$env:USERPROFILE\.nuget\packages\microsoft.windowsappsdk\1.4.240512000\tools\net472\XamlCompiler.exe"
-
-          Write-Host "===== XamlCompiler 原始输出 ====="
-          if ((Test-Path $input) -and (Test-Path $xamlc)) {
-            & $xamlc $input $output 2>&1 | ForEach-Object { Write-Host $_ }
-            Write-Host "退出码: $LASTEXITCODE"
-          } else {
-            Write-Host "input.json: $(Test-Path $input) / XamlCompiler: $(Test-Path $xamlc)"
-          }
+          Select-String -Path build.log -Pattern "error|Error|XLS|WMC|MSB" | ForEach-Object { $_.Line }
