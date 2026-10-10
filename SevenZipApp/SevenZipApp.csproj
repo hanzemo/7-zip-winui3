@@ -31,20 +31,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ApplicationDefinition Include="App.xaml" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Page Include="Views\MainWindow.xaml" />
-    <Page Include="Pages\HomePage.xaml" />
-    <Page Include="Pages\CompressPage.xaml" />
-    <Page Include="Pages\ExtractPage.xaml" />
-    <Page Include="Pages\FilesPage.xaml" />
-    <Page Include="Pages\ArchivePage.xaml" />
-    <Page Include="Pages\SettingsPage.xaml" />
-  </ItemGroup>
-
-  <ItemGroup>
     <AppxManifest Include="Package.appxmanifest">
       <SubType>Designer</SubType>
     </AppxManifest>
