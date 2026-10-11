@@ -11,8 +11,21 @@ public class ArchiveItem
     public string? Path { get; set; }
     public uint Size { get; set; }
     public int Count { get; set; }
+
+    // 浏览模式
     public bool IsDirectory { get; set; }
     public DateTime Modified { get; set; } = DateTime.MinValue;
+
+    // 兼容 SevenZipEngine / FilesPage 里的旧字段名
+    public bool IsFolder
+    {
+        get => IsDirectory;
+        set => IsDirectory = value;
+    }
+
+    // 压缩包条目元数据（SevenZipEngine 用）
+    public bool Encrypted { get; set; }
+    public string? Method { get; set; }
 
     public string SizeText => IsDirectory
         ? "<文件夹>"

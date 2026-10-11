@@ -39,7 +39,7 @@ public sealed class SevenZipEngine
                     Name       = Path.GetFileName(entry.FileName),
                     Path       = entry.FileName,
                     IsFolder   = entry.IsDirectory,
-                    Size       = entry.Size,
+                    Size       = (uint)entry.Size,
                     Modified   = entry.LastWriteTime,
                     Encrypted  = entry.Encrypted,
                     Method     = entry.Method,
