@@ -27,7 +27,7 @@ public partial class App : Application
         };
     }
 
-    protected override void OnLaunched(LaunchActivatedEventArgs args)
+    protected override void OnLaunched(Microsoft.UI.Xaml.LaunchActivatedEventArgs args)
     {
         try
         {
@@ -36,12 +36,6 @@ public partial class App : Application
 
             HandleActivation();
 
-            if (!string.IsNullOrEmpty(args.Arguments))
-            {
-                var path = args.Arguments.Trim('"');
-                if (System.IO.File.Exists(path))
-                    (MainWindow as Views.MainWindow)?.OpenArchive(path);
-            }
         }
         catch (Exception ex)
         {
