@@ -96,7 +96,10 @@ public sealed partial class ArchivePage : Page
                 try
                 {
                     var outPath = Path.Combine(tempDir, Path.GetFileName(entry.Name));
-                    extractor.ExtractFile(entry.Name, outPath);
+                    using (var fs = File.Create(outPath))
+                    {
+                        extractor.ExtractFile(entry.Name, fs);
+                    }
                     if (File.Exists(outPath))
                     {
                         var sf = await StorageFile.GetFileFromPathAsync(outPath);

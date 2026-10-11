@@ -1,67 +1,78 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
-//
-// MainWindow.xaml.cs —— 主窗口，实现自定义标题栏、导航等。
 
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Media.Animation;
-using SevenZipApp.Pages;
 using System;
+using System.Linq;
 
 namespace SevenZipApp.Views;
 
 public sealed partial class MainWindow : Window
 {
+    private bool _firstActivated = false;
+
     public MainWindow()
     {
         this.InitializeComponent();
 
         this.ExtendsContentIntoTitleBar = true;
-        this.SetTitleBar(this.TitleBarGrid);
+        this.SetTitleBar(AppTitleBar);
 
-        this.MainFrame.Navigate(typeof(HomePage));
-
-        Logger.Info("MainWindow 初始化完成", "MainWindow");
+        this.Activated += MainWindow_FirstActivated;
     }
 
-    private void NavView_BackRequested(NavigationView sender, NavigationViewBackRequestedEventArgs args)
+    private void MainWindow_FirstActivated(object sender, WindowActivatedEventArgs args)
     {
-        Logger.Warn("BackRequested received", "MainWindow");
-        if (MainFrame.CanGoBack)
-        {
-            MainFrame.GoBack();
-        }
+        if (_firstActivated) return;
+        _firstActivated = true;
+
+        MainFrame.Navigate(typeof(Pages.HomePage));
+        NavView.SelectedItem = NavView.MenuItems
+            .OfType<NavigationViewItem>()
+            .FirstOrDefault(i => i.Tag?.ToString() == "Home");
+    }
+
+    public void OpenArchive(string path)
+    {
+        if (string.IsNullOrEmpty(path)) return;
+
+        MainFrame.Navigate(typeof(Pages.ArchivePage), path);
+
+        NavView.SelectedItem = NavView.MenuItems
+            .OfType<NavigationViewItem>()
+            .FirstOrDefault(i => i.Tag?.ToString() == "Archive");
     }
 
     private void NavView_ItemInvoked(NavigationView sender, NavigationViewItemInvokedEventArgs args)
     {
-        if (args.InvokedItemContainer is not NavigationViewItem selectedItem)
-            return;
+        if (args.InvokedItemContainer is not NavigationViewItem selectedItem) return;
 
         string? tag = selectedItem.Tag?.ToString();
-
-        Logger.Info($"导航到页面: {tag}", "MainWindow");
+        Logger.Info($"导航到页面：{tag}", "MainWindow");
 
         MainFrame.ContentTransitions = new TransitionCollection();
 
         Type? pageType = tag switch
         {
-            "Home"         => typeof(HomePage),
-            "Compress"     => typeof(CompressPage),
-            "Extract"      => typeof(ExtractPage),
-            "FileExplorer" => typeof(FilesPage),
-            "Archive"      => typeof(ArchivePage),
-            "Settings"     => typeof(SettingsPage),
+            "Home"         => typeof(Pages.HomePage),
+            "Compress"     => typeof(Pages.CompressPage),
+            "Extract"      => typeof(Pages.ExtractPage),
+            "FileExplorer" => typeof(Pages.FilesPage),
+            "Archive"      => typeof(Pages.ArchivePage),
+            "Settings"     => typeof(Pages.SettingsPage),
             _              => null,
         };
 
         if (pageType != null)
-        {
             MainFrame.Navigate(pageType);
-        }
         else
-        {
-            Logger.Warn($"未知导航标签: {tag}", "MainWindow");
-        }
+            Logger.Warn($"未知导航标签：{tag}", "MainWindow");
+    }
+
+    private void NavView_BackRequested(NavigationView sender, NavigationViewBackRequestedEventArgs args)
+    {
+        if (MainFrame.CanGoBack)
+            MainFrame.GoBack();
     }
 }

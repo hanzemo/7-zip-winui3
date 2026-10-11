@@ -7,24 +7,43 @@ SPDX-License-Identifier: GPL-2.0-or-later
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:local="using:SevenZipApp.Pages"
     mc:Ignorable="d"
     Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
 
-    <Grid>
+    <Grid Padding="16">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
 
-        <CommandBar Grid.Row="0" DefaultLabelPosition="Right" Padding="8,0,8,0">
-            <AppBarButton Label="清空历史" Click="ClearHistory_Click"/>
-        </CommandBar>
+        <StackPanel Grid.Row="0" Orientation="Horizontal" Spacing="12" Margin="0,0,0,12">
+            <TextBlock x:Name="ArchivePathText"
+                       VerticalAlignment="Center"
+                       Style="{StaticResource BodyStrongTextBlockStyle}"
+                       Text="未加载压缩包"/>
+            <Button Content="加载压缩包" Click="Load_Click"/>
+        </StackPanel>
 
-        <ScrollViewer Grid.Row="1">
-            <StackPanel Padding="16">
-                <TextBlock Text="归档历史" Style="{StaticResource TitleTextBlockStyle}" FontWeight="SemiBold" Margin="0,0,0,16"/>
-                <TextBlock Text="归档历史记录尚未实现" Style="{StaticResource BodyTextBlockStyle}" Foreground="{ThemeResource TextFillColorSecondary}"/>
-            </StackPanel>
-        </ScrollViewer>
+        <ListView x:Name="ArchiveList"
+                  Grid.Row="1"
+                  CanDragItems="True"
+                  DragItemsStarting="ArchiveList_DragItemsStarting"
+                  SelectionMode="Extended">
+            <ListView.ItemTemplate>
+                <DataTemplate x:DataType="local:ArchiveEntry">
+                    <Grid Padding="8,4">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="100"/>
+                            <ColumnDefinition Width="140"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Grid.Column="0" Text="{x:Bind Name}"/>
+                        <TextBlock Grid.Column="1" Text="{x:Bind SizeText}"/>
+                        <TextBlock Grid.Column="2" Text="{x:Bind ModifiedText}"/>
+                    </Grid>
+                </DataTemplate>
+            </ListView.ItemTemplate>
+        </ListView>
     </Grid>
 </Page>

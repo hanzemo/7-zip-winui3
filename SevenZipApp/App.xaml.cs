@@ -1,9 +1,8 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
-//
-// App.xaml.cs
 
 using Microsoft.UI.Xaml;
 using System;
+using Windows.ApplicationModel.Activation;
 
 namespace SevenZipApp;
 
@@ -15,27 +14,16 @@ public partial class App : Application
     {
         this.InitializeComponent();
 
-        // UI 线程未处理异常
         this.UnhandledException += (s, e) =>
         {
             Program.WriteCrashLog("App.UnhandledException", e.Exception);
-            // 保持 false：让系统记录完整崩溃信息；改为 true 则吞掉异常（可能导致进程继续运行但状态异常）
             e.Handled = false;
         };
 
-        // 非 UI 线程未处理异常
         AppDomain.CurrentDomain.UnhandledException += (s, e) =>
         {
             if (e.ExceptionObject is Exception ex)
                 Program.WriteCrashLog("AppDomain.UnhandledException", ex);
-            else
-                Program.WriteCrashLog("AppDomain.UnhandledException", new Exception(e.ExceptionObject?.ToString() ?? "unknown"));
-        };
-
-        // Task 内未观察的异常（可选，便于排查）
-        System.Threading.Tasks.TaskScheduler.UnobservedTaskException += (s, e) =>
-        {
-            Program.WriteCrashLog("TaskScheduler.UnobservedTaskException", e.Exception);
         };
     }
 
@@ -45,11 +33,44 @@ public partial class App : Application
         {
             MainWindow = new Views.MainWindow();
             MainWindow.Activate();
+
+            HandleActivation();
+
+            if (!string.IsNullOrEmpty(args.Arguments))
+            {
+                var path = args.Arguments.Trim('"');
+                if (System.IO.File.Exists(path))
+                    (MainWindow as Views.MainWindow)?.OpenArchive(path);
+            }
         }
         catch (Exception ex)
         {
             Program.WriteCrashLog("App.OnLaunched", ex);
             throw;
+        }
+    }
+
+    private static void HandleActivation()
+    {
+        try
+        {
+            var activated = Microsoft.Windows.AppLifecycle.AppInstance
+                .GetCurrent().GetActivatedEventArgs();
+
+            if (activated.Kind == Microsoft.Windows.AppLifecycle.ExtendedActivationKind.File)
+            {
+                var fileArgs = activated.Data as IFileActivatedEventArgs;
+                if (fileArgs?.Files.Count > 0)
+                {
+                    var path = (fileArgs.Files[0] as Windows.Storage.StorageFile)?.Path;
+                    if (!string.IsNullOrEmpty(path))
+                        (MainWindow as Views.MainWindow)?.OpenArchive(path);
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Program.WriteCrashLog("App.HandleActivation", ex);
         }
     }
 }

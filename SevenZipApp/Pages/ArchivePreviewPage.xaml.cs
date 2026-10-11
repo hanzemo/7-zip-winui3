@@ -87,7 +87,10 @@ public sealed partial class ArchivePreviewPage : Page
                     var safeName = Path.GetFileName(entry.Name);
                     var outPath = Path.Combine(tempDir, safeName);
 
-                    extractor.ExtractFile(entry.Name, outPath);
+                    using (var fs = File.Create(outPath))
+                    {
+                        extractor.ExtractFile(entry.Name, fs);
+                    }
 
                     if (File.Exists(outPath))
                     {

@@ -12,80 +12,78 @@ SPDX-License-Identifier: GPL-2.0-or-later
 
     <Grid>
         <Grid.RowDefinitions>
-            <RowDefinition Height="Auto" />
+            <RowDefinition Height="32" />
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
 
-        <!-- 自定义标题栏 -->
-        <Grid Grid.Row="0" x:Name="TitleBarGrid" Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+        <Grid x:Name="AppTitleBar" Grid.Row="0"
+              Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
             <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"/>
                 <ColumnDefinition Width="*"/>
                 <ColumnDefinition Width="Auto"/>
             </Grid.ColumnDefinitions>
 
-            <TextBlock
-                Text="7-Zip WinUI3"
-                Grid.Column="1"
-                VerticalAlignment="Center"
-                FontSize="14"
-                FontWeight="Bold"
-                Margin="0,4,0,4"/>
+            <TextBlock Grid.Column="0"
+                       Text="7-Zip WinUI3"
+                       VerticalAlignment="Center"
+                       FontSize="13"
+                       Margin="12,0,0,0"/>
 
+            <StackPanel x:Name="TitleBarRightPadding"
+                        Grid.Column="2"
+                        Orientation="Horizontal"
+                        Width="140"/>
         </Grid>
 
-        <!-- Main Content Area with Navigation -->
-<NavigationView
-    x:Name="NavView"
-    Grid.Row="1"
-    IsBackButtonVisible="Collapsed"
-    IsPaneToggleButtonVisible="True"
-    PaneDisplayMode="Left"
+        <NavigationView
+            x:Name="NavView"
+            Grid.Row="1"
+            IsBackButtonVisible="Collapsed"
+            IsPaneToggleButtonVisible="True"
+            PaneDisplayMode="Left"
             IsSettingsVisible="False"
-    BackRequested="NavView_BackRequested"
-    ItemInvoked="NavView_ItemInvoked">
+            BackRequested="NavView_BackRequested"
+            ItemInvoked="NavView_ItemInvoked">
 
-    <NavigationView.MenuItems>
-        <NavigationViewItem Content="主页" Tag="Home">
-            <NavigationViewItem.Icon>
-                <FontIcon Glyph="&#xE80F;"/>
-            </NavigationViewItem.Icon>
-        </NavigationViewItem>
+            <NavigationView.MenuItems>
+                <NavigationViewItem Content="主页" Tag="Home">
+                    <NavigationViewItem.Icon>
+                        <FontIcon Glyph="&#xE80F;"/>
+                    </NavigationViewItem.Icon>
+                </NavigationViewItem>
+                <NavigationViewItem Content="压缩" Tag="Compress">
+                    <NavigationViewItem.Icon>
+                        <FontIcon Glyph="&#xE7B8;"/>
+                    </NavigationViewItem.Icon>
+                </NavigationViewItem>
+                <NavigationViewItem Content="解压" Tag="Extract">
+                    <NavigationViewItem.Icon>
+                        <FontIcon Glyph="&#xE896;"/>
+                    </NavigationViewItem.Icon>
+                </NavigationViewItem>
+                <NavigationViewItem Content="文件查看" Tag="FileExplorer">
+                    <NavigationViewItem.Icon>
+                        <FontIcon Glyph="&#xE8B7;"/>
+                    </NavigationViewItem.Icon>
+                </NavigationViewItem>
+                <NavigationViewItem Content="归档" Tag="Archive">
+                    <NavigationViewItem.Icon>
+                        <FontIcon Glyph="&#xE7C3;"/>
+                    </NavigationViewItem.Icon>
+                </NavigationViewItem>
+            </NavigationView.MenuItems>
 
-        <NavigationViewItem Content="压缩" Tag="Compress">
-            <NavigationViewItem.Icon>
-                <FontIcon Glyph="&#xE7B8;"/>
-            </NavigationViewItem.Icon>
-        </NavigationViewItem>
+            <NavigationView.FooterMenuItems>
+                <NavigationViewItem Content="设置" Tag="Settings">
+                    <NavigationViewItem.Icon>
+                        <FontIcon Glyph="&#xE713;"/>
+                    </NavigationViewItem.Icon>
+                </NavigationViewItem>
+            </NavigationView.FooterMenuItems>
 
-        <NavigationViewItem Content="解压" Tag="Extract">
-            <NavigationViewItem.Icon>
-                <FontIcon Glyph="&#xE896;"/>
-            </NavigationViewItem.Icon>
-        </NavigationViewItem>
+            <Frame x:Name="MainFrame"/>
 
-        <NavigationViewItem Content="文件查看" Tag="FileExplorer">
-            <NavigationViewItem.Icon>
-                <FontIcon Glyph="&#xE8B7;"/>
-            </NavigationViewItem.Icon>
-        </NavigationViewItem>
-
-        <NavigationViewItem Content="归档" Tag="Archive">
-            <NavigationViewItem.Icon>
-                <FontIcon Glyph="&#xE7C3;"/>
-            </NavigationViewItem.Icon>
-        </NavigationViewItem>
-    </NavigationView.MenuItems>
-
-    <NavigationView.FooterMenuItems>
-        <NavigationViewItem Content="设置" Tag="Settings">
-            <NavigationViewItem.Icon>
-                <FontIcon Glyph="&#xE713;"/>
-            </NavigationViewItem.Icon>
-        </NavigationViewItem>
-    </NavigationView.FooterMenuItems>
-
-    <Frame x:Name="MainFrame"/>
-
-</NavigationView>
+        </NavigationView>
     </Grid>
 </Window>
