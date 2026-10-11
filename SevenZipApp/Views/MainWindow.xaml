@@ -40,6 +40,7 @@ SPDX-License-Identifier: GPL-2.0-or-later
     IsBackButtonVisible="Collapsed"
     IsPaneToggleButtonVisible="True"
     PaneDisplayMode="Left"
+            IsSettingsVisible="False"
     BackRequested="NavView_BackRequested"
     ItemInvoked="NavView_ItemInvoked">
 

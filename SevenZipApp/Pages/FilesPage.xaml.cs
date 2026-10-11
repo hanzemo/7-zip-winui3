@@ -2,6 +2,7 @@
 //
 // FilesPage.xaml.cs
 
+using WinRT.Interop;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.UI.Xaml;

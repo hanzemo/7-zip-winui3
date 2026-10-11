@@ -2,6 +2,7 @@
 //
 // ExtractPage.xaml.cs
 
+using WinRT.Interop;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
@@ -37,6 +38,8 @@ public sealed partial class ExtractPage : Page
         foreach (var ext in new[] { ".7z", ".zip", ".rar", ".tar", ".gz", ".bz2", ".xz" })
             picker.FileTypeFilter.Add(ext);
 
+        var hwnd = WinRT.Interop.WindowNative.GetWindowHandle(App.MainWindow);
+        WinRT.Interop.InitializeWithWindow.Initialize(picker, hwnd);
         var file = await picker.PickSingleFileAsync();
         if (file != null)
         {
@@ -51,6 +54,8 @@ public sealed partial class ExtractPage : Page
         Logger.Info("打开目标文件夹选择器", "ExtractPage");
 
         var picker = new FolderPicker();
+        var hwnd = WinRT.Interop.WindowNative.GetWindowHandle(App.MainWindow);
+        WinRT.Interop.InitializeWithWindow.Initialize(picker, hwnd);
         var folder = await picker.PickSingleFolderAsync();
         if (folder != null)
         {
