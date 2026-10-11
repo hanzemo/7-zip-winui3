@@ -43,17 +43,23 @@ public sealed partial class ArchivePreviewPage : Page
             _allEntries = extractor.ArchiveFileData
                 .Select(f => new ArchiveEntry
                 {
-                    Name = Path.GetFileName(f.FileName.TrimEnd('/')),
-                    FullPath = f.FileName,
+                    FullPath = f.FileName.Replace('\\', '/').TrimStart('/'),
+                    Name = Path.GetFileName(f.FileName.TrimEnd('/', '\\')),
                     Size = f.Size,
                     Modified = f.LastWriteTime,
-                    IsDirectory = f.IsDirectory,
+                    IsDirectory = f.IsDirectory
+                        || f.FileName.EndsWith("/")
+                        || f.FileName.EndsWith("\\"),
                 })
+                .Where(x => !string.IsNullOrEmpty(x.FullPath))
                 .ToList();
 
             _currentPath = "";
             RefreshView();
-            Logger.Info($"预览 {path}，共 {_allEntries.Count} 项", "ArchivePreviewPage");
+
+            // 前 30 条日志（定位用）
+            foreach (var e in _allEntries.Take(30))
+                Logger.Info($"[Load] FullPath='{e.FullPath}' IsDir={e.IsDirectory}", "ArchivePreviewPage");
         }
         catch (Exception ex)
         {
@@ -63,36 +69,66 @@ public sealed partial class ArchivePreviewPage : Page
 
     private void RefreshView()
     {
-        var prefix = string.IsNullOrEmpty(_currentPath) ? "" : _currentPath + "/";
+        var currentLevels = _currentPath
+            .Trim('/')
+            .Split('/', StringSplitOptions.RemoveEmptyEntries);
 
-        var items = _allEntries
-            .Where(x => x.FullPath.StartsWith(prefix))
-            .Where(x => x.FullPath.Length > prefix.Length)
-            .Select(x =>
+        var result = new List<ArchiveEntry>();
+
+        foreach (var entry in _allEntries)
+        {
+            var parts = entry.FullPath
+                .Replace('\\', '/')
+                .Trim('/')
+                .Split('/', StringSplitOptions.RemoveEmptyEntries);
+
+            if (parts.Length <= currentLevels.Length) continue;
+
+            bool match = true;
+            for (int i = 0; i < currentLevels.Length; i++)
             {
-                var relative = x.FullPath.Substring(prefix.Length);
-                var slashIdx = relative.IndexOf('/');
-                if (slashIdx >= 0)
+                if (!string.Equals(parts[i], currentLevels[i], StringComparison.OrdinalIgnoreCase))
                 {
-                    var dirName = relative.Substring(0, slashIdx);
-                    return new ArchiveEntry
+                    match = false;
+                    break;
+                }
+            }
+            if (!match) continue;
+
+            int depth = parts.Length - currentLevels.Length;
+
+            if (depth == 1)
+            {
+                if (!result.Any(x => x.FullPath == entry.FullPath))
+                    result.Add(entry);
+            }
+            else
+            {
+                var dirName = parts[currentLevels.Length];
+                var dirPath = string.Join("/", parts.Take(currentLevels.Length + 1)) + "/";
+
+                if (!result.Any(x => x.FullPath == dirPath))
+                {
+                    result.Add(new ArchiveEntry
                     {
                         Name = dirName,
-                        FullPath = prefix + dirName + "/",
+                        FullPath = dirPath,
                         IsDirectory = true,
                         Size = 0,
-                        Modified = x.Modified,
-                    };
+                        Modified = entry.Modified,
+                    });
                 }
-                return x;
-            })
-            .GroupBy(x => x.FullPath)
-            .Select(g => g.First())
+            }
+        }
+
+        var sorted = result
             .OrderBy(x => x.IsDirectory ? 0 : 1)
-            .ThenBy(x => x.Name)
+            .ThenBy(x => x.Name, StringComparer.OrdinalIgnoreCase)
             .ToList();
 
-        EntryList.ItemsSource = items;
+        Logger.Info($"[Refresh] path='{_currentPath}' 显示 {sorted.Count} 项 / 共 {_allEntries.Count}", "ArchivePreviewPage");
+
+        EntryList.ItemsSource = sorted;
         CurrentPathText.Text = string.IsNullOrEmpty(_currentPath) ? "根目录" : $"/ {_currentPath}";
         GoUpButton.Visibility = string.IsNullOrEmpty(_currentPath)
             ? Visibility.Collapsed : Visibility.Visible;
@@ -103,15 +139,17 @@ public sealed partial class ArchivePreviewPage : Page
         if (EntryList.SelectedItem is ArchiveEntry entry && entry.IsDirectory)
         {
             _currentPath = entry.FullPath.TrimEnd('/');
+            Logger.Info($"[DoubleTap] 进入 '{_currentPath}'", "ArchivePreviewPage");
             RefreshView();
         }
     }
 
     private void GoUp_Click(object sender, RoutedEventArgs e)
     {
-        if (string.IsNullOrEmpty(_currentPath)) return;
-        var idx = _currentPath.LastIndexOf('/');
-        _currentPath = idx >= 0 ? _currentPath.Substring(0, idx) : "";
+        var current = _currentPath.Trim('/');
+        if (string.IsNullOrEmpty(current)) return;
+        var idx = current.LastIndexOf('/');
+        _currentPath = idx >= 0 ? current.Substring(0, idx) : "";
         RefreshView();
     }
 
@@ -139,7 +177,6 @@ public sealed partial class ArchivePreviewPage : Page
                     {
                         extractor.ExtractFile(entry.FullPath, fs);
                     }
-
                     if (File.Exists(outPath))
                     {
                         var sf = await StorageFile.GetFileFromPathAsync(outPath);
