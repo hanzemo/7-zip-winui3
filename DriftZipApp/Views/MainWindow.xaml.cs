@@ -57,7 +57,7 @@ public sealed partial class MainWindow : Window
         {
             try
             {
-                var engine = new SevenZipEngine();
+                var engine = new DriftZipEngine();
                 string? dir;
                 string? output;
 

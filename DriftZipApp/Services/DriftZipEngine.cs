@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 //
-// SevenZipEngine.cs —— 基于 SharpSevenZip 库的核心服务。
+// DriftZipEngine.cs —— 基于 SharpSevenZip 库的核心服务。
 //
 
 using System;
@@ -16,7 +16,7 @@ namespace DriftZipApp;
 /// <summary>
 /// 7-Zip 引擎：负责所有压缩与解压操作。
 /// </summary>
-public sealed class SevenZipEngine
+public sealed class DriftZipEngine
 {
     // ─────────────────────────────────────────────────────
     //  枚举压缩包内容

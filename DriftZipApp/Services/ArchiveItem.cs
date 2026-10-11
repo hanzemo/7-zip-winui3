@@ -16,14 +16,14 @@ public class ArchiveItem
     public bool IsDirectory { get; set; }
     public DateTime Modified { get; set; } = DateTime.MinValue;
 
-    // 兼容 SevenZipEngine / FilesPage 里的旧字段名
+    // 兼容 DriftZipEngine / FilesPage 里的旧字段名
     public bool IsFolder
     {
         get => IsDirectory;
         set => IsDirectory = value;
     }
 
-    // 压缩包条目元数据（SevenZipEngine 用）
+    // 压缩包条目元数据（DriftZipEngine 用）
     public bool Encrypted { get; set; }
     public string? Method { get; set; }
 

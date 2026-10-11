@@ -97,7 +97,7 @@ public partial class ArchiveListViewModel : ObservableObject
 
         try
         {
-            var engine = new SevenZipEngine();
+            var engine = new DriftZipEngine();
             var items = await Task.Run(() => engine.ListArchive(_selectedArchivePath));
 
             Items.Clear();
@@ -132,7 +132,7 @@ public partial class ArchiveListViewModel : ObservableObject
         StatusMessage = "开始解压...";
         try
         {
-            var engine = new SevenZipEngine();
+            var engine = new DriftZipEngine();
             await Task.Run(() => engine.Extract(_selectedArchivePath, folder, null, null, CancellationToken.None));
             StatusMessage = $"解压完成：{folder}";
             Logger.Info("解压完成", "ArchiveListViewModel");
@@ -162,7 +162,7 @@ public partial class ArchiveListViewModel : ObservableObject
 
         try
         {
-            var engine = new SevenZipEngine();
+            var engine = new DriftZipEngine();
             await Task.Run(() => engine.Extract(_selectedArchivePath, folder, null, null, CancellationToken.None));
             StatusMessage = $"解压完成：{folder}";
         }

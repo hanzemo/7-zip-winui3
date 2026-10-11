@@ -85,7 +85,7 @@ public sealed partial class ExtractPage : Page
 
         try
         {
-            var engine = new SevenZipEngine();
+            var engine = new DriftZipEngine();
             await Task.Run(() => engine.Extract(_archivePath, _outputPath, password, null, CancellationToken.None));
             StatusTextBlock.Text = $"解压完成：{_outputPath}";
             Logger.Info("解压操作完成", "ExtractPage");

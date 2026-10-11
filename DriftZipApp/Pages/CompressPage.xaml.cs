@@ -99,7 +99,7 @@ public sealed partial class CompressPage : Page
 
         try
         {
-            var engine = new SevenZipEngine();
+            var engine = new DriftZipEngine();
             await Task.Run(() => engine.Compress(options, outputPath, null, CancellationToken.None));
             StatusTextBlock.Text = $"压缩完成：{Path.GetFileName(outputPath)}";
             Logger.Info("压缩操作完成", "CompressPage");

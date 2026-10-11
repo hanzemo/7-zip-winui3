@@ -125,7 +125,7 @@ public sealed partial class HomePage : Page
         var target = await folder.PickSingleFolderAsync();
         if (target == null) return;
 
-        var engine = new SevenZipEngine();
+        var engine = new DriftZipEngine();
         foreach (var item in items)
         {
             if (string.IsNullOrEmpty(item.Path)) continue;
@@ -160,7 +160,7 @@ public sealed partial class HomePage : Page
         };
         try
         {
-            var engine = new SevenZipEngine();
+            var engine = new DriftZipEngine();
             engine.Compress(options, file.Path, null, System.Threading.CancellationToken.None);
             ViewModel.StatusMessage = $"压缩完成：{file.Path}";
         }
@@ -174,7 +174,7 @@ public sealed partial class HomePage : Page
         if (items.Count == 0) { if (ArchiveGridView.SelectedItem is ArchiveItem s) items.Add(s); }
         if (items.Count == 0) return;
 
-        var engine = new SevenZipEngine();
+        var engine = new DriftZipEngine();
         foreach (var item in items)
         {
             if (string.IsNullOrEmpty(item.Path)) continue;
@@ -207,7 +207,7 @@ public sealed partial class HomePage : Page
         };
         try
         {
-            var engine = new SevenZipEngine();
+            var engine = new DriftZipEngine();
             engine.Compress(options, output, null, System.Threading.CancellationToken.None);
             ViewModel.StatusMessage = $"压缩完成：{output}";
         }
