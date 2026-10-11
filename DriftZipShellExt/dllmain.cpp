@@ -21,7 +21,7 @@ BOOL WINAPI DllMain(HINSTANCE hInstance, DWORD reason, LPVOID)
 
 STDAPI DllGetClassObject(REFCLSID rclsid, REFIID riid, void** ppv)
 {
-    if (IsEqualCLSID(rclsid, CLSID_DriftZipParent))
+    if (IsEqualCLSID(rclsid, CLSID_SevenZipParent))
         return Make<SevenZipClassFactory<SevenZipParent>>().CopyTo(riid, ppv);
     return CLASS_E_CLASSNOTAVAILABLE;
 }
