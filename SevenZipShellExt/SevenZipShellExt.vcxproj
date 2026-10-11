@@ -54,6 +54,7 @@
 
   <ItemGroup>
     <ClCompile Include="dllmain.cpp" />
+    <ClCompile Include="guids.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="guids.h" />
