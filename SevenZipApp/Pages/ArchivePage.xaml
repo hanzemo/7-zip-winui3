@@ -17,7 +17,7 @@ SPDX-License-Identifier: GPL-2.0-or-later
         </Grid.RowDefinitions>
 
         <CommandBar Grid.Row="0" DefaultLabelPosition="Right" Padding="8,0,8,0">
-            <AppBarButton Icon="Clear" Label="清空历史" Click="ClearHistory_Click"/>
+            <AppBarButton Label="清空历史" Click="ClearHistory_Click"/>
         </CommandBar>
 
         <ScrollViewer Grid.Row="1">

@@ -18,8 +18,8 @@ SPDX-License-Identifier: GPL-2.0-or-later
         </Grid.RowDefinitions>
 
         <CommandBar Grid.Row="0" DefaultLabelPosition="Right" Padding="8,0,8,0">
-            <AppBarButton Icon="Save" Label="压缩" Click="Compress_Click"/>
-            <AppBarButton Icon="Cancel" Label="取消" Click="Cancel_Click"/>
+            <AppBarButton Label="压缩" Click="Compress_Click"/>
+            <AppBarButton Label="取消" Click="Cancel_Click"/>
         </CommandBar>
 
         <ScrollViewer Grid.Row="1">

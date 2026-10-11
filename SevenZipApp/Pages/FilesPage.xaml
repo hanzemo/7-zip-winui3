@@ -18,9 +18,9 @@ SPDX-License-Identifier: GPL-2.0-or-later
         </Grid.RowDefinitions>
 
         <CommandBar Grid.Row="0" DefaultLabelPosition="Right" Padding="8,0,8,0">
-            <AppBarButton Icon="Back" Label="返回" Click="Back_Click"/>
-            <AppBarButton Icon="Refresh" Label="刷新" Click="Refresh_Click"/>
-            <AppBarButton Icon="Open" Label="解压到" Click="Extract_Click"/>
+            <AppBarButton Label="返回" Click="Back_Click"/>
+            <AppBarButton Label="刷新" Click="Refresh_Click"/>
+            <AppBarButton Label="解压到" Click="Extract_Click"/>
         </CommandBar>
 
         <ListView Grid.Row="1"

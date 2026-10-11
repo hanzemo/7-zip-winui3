@@ -17,7 +17,7 @@ SPDX-License-Identifier: GPL-2.0-or-later
         </Grid.RowDefinitions>
 
         <CommandBar Grid.Row="0" DefaultLabelPosition="Right" Padding="8,0,8,0">
-            <AppBarButton Icon="Save" Label="保存" Click="Save_Settings_Click"/>
+            <AppBarButton Label="保存" Click="Save_Settings_Click"/>
         </CommandBar>
 
         <ScrollViewer Grid.Row="1">
