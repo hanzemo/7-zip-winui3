@@ -2,6 +2,7 @@
 //
 // HomePage.xaml.cs
 
+using WinRT.Interop;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.UI.Xaml;
@@ -83,6 +84,10 @@ public partial class HomeViewModel : ObservableObject
         foreach (var ext in new[] { ".7z", ".zip", ".rar", ".tar", ".gz", ".bz2", ".xz" })
             picker.FileTypeFilter.Add(ext);
 
+        // ✅ 绑定当前窗口
+        var hwnd = WinRT.Interop.WindowNative.GetWindowHandle(App.MainWindow);
+        WinRT.Interop.InitializeWithWindow.Initialize(picker, hwnd);
+
         var file = await picker.PickSingleFileAsync();
         if (file == null) return;
 
@@ -122,6 +127,10 @@ public partial class HomeViewModel : ObservableObject
         Logger.Info($"解压到文件夹：{SelectedArchive.Path}", "HomeViewModel");
 
         var picker = new FolderPicker();
+
+        // ✅ 绑定当前窗口
+        var hwnd = WinRT.Interop.WindowNative.GetWindowHandle(App.MainWindow);
+        WinRT.Interop.InitializeWithWindow.Initialize(picker, hwnd);
         var folder = await picker.PickSingleFolderAsync();
         if (folder == null) return;
 

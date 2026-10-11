@@ -2,6 +2,7 @@
 //
 // CompressPage.xaml.cs
 
+using WinRT.Interop;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
@@ -36,6 +37,10 @@ public sealed partial class CompressPage : Page
         };
         picker.FileTypeFilter.Add("*");
 
+        // ✅ 绑定当前窗口
+        var hwnd = WinRT.Interop.WindowNative.GetWindowHandle(App.MainWindow);
+        WinRT.Interop.InitializeWithWindow.Initialize(picker, hwnd);
+
         var files = await picker.PickMultipleFilesAsync();
         if (files == null || files.Count == 0) return;
 
@@ -60,6 +65,10 @@ public sealed partial class CompressPage : Page
         picker.FileTypeChoices.Add("gz", new[] { ".gz" });
         picker.FileTypeChoices.Add("bz2", new[] { ".bz2" });
         picker.FileTypeChoices.Add("xz", new[] { ".xz" });
+
+        // ✅ 绑定当前窗口
+        var hwnd = WinRT.Interop.WindowNative.GetWindowHandle(App.MainWindow);
+        WinRT.Interop.InitializeWithWindow.Initialize(picker, hwnd);
 
         var file = await picker.PickSaveFileAsync();
         if (file != null)
