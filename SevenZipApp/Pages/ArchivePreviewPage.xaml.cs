@@ -2,6 +2,7 @@
 
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
+using Microsoft.UI.Xaml.Input;
 using Microsoft.UI.Xaml.Navigation;
 using SharpSevenZip;
 using System;
@@ -16,6 +17,8 @@ namespace SevenZipApp.Pages;
 public sealed partial class ArchivePreviewPage : Page
 {
     private string? _archivePath;
+    private List<ArchiveEntry> _allEntries = new();
+    private string _currentPath = "";
 
     public ArchivePreviewPage()
     {
@@ -37,20 +40,20 @@ public sealed partial class ArchivePreviewPage : Page
         try
         {
             using var extractor = new SharpSevenZipExtractor(path);
-            var items = extractor.ArchiveFileData
+            _allEntries = extractor.ArchiveFileData
                 .Select(f => new ArchiveEntry
                 {
-                    Name = f.FileName,
+                    Name = Path.GetFileName(f.FileName.TrimEnd('/')),
+                    FullPath = f.FileName,
                     Size = f.Size,
                     Modified = f.LastWriteTime,
                     IsDirectory = f.IsDirectory,
                 })
-                .OrderBy(x => x.IsDirectory ? 0 : 1)
-                .ThenBy(x => x.Name)
                 .ToList();
 
-            EntryList.ItemsSource = items;
-            Logger.Info($"预览 {path}，共 {items.Count} 项", "ArchivePreviewPage");
+            _currentPath = "";
+            RefreshView();
+            Logger.Info($"预览 {path}，共 {_allEntries.Count} 项", "ArchivePreviewPage");
         }
         catch (Exception ex)
         {
@@ -58,21 +61,68 @@ public sealed partial class ArchivePreviewPage : Page
         }
     }
 
+    private void RefreshView()
+    {
+        var prefix = string.IsNullOrEmpty(_currentPath) ? "" : _currentPath + "/";
+
+        var items = _allEntries
+            .Where(x => x.FullPath.StartsWith(prefix))
+            .Where(x => x.FullPath.Length > prefix.Length)
+            .Select(x =>
+            {
+                var relative = x.FullPath.Substring(prefix.Length);
+                var slashIdx = relative.IndexOf('/');
+                if (slashIdx >= 0)
+                {
+                    var dirName = relative.Substring(0, slashIdx);
+                    return new ArchiveEntry
+                    {
+                        Name = dirName,
+                        FullPath = prefix + dirName + "/",
+                        IsDirectory = true,
+                        Size = 0,
+                        Modified = x.Modified,
+                    };
+                }
+                return x;
+            })
+            .GroupBy(x => x.FullPath)
+            .Select(g => g.First())
+            .OrderBy(x => x.IsDirectory ? 0 : 1)
+            .ThenBy(x => x.Name)
+            .ToList();
+
+        EntryList.ItemsSource = items;
+        CurrentPathText.Text = string.IsNullOrEmpty(_currentPath) ? "根目录" : $"/ {_currentPath}";
+        GoUpButton.Visibility = string.IsNullOrEmpty(_currentPath)
+            ? Visibility.Collapsed : Visibility.Visible;
+    }
+
+    private void EntryList_DoubleTapped(object sender, DoubleTappedRoutedEventArgs e)
+    {
+        if (EntryList.SelectedItem is ArchiveEntry entry && entry.IsDirectory)
+        {
+            _currentPath = entry.FullPath.TrimEnd('/');
+            RefreshView();
+        }
+    }
+
+    private void GoUp_Click(object sender, RoutedEventArgs e)
+    {
+        if (string.IsNullOrEmpty(_currentPath)) return;
+        var idx = _currentPath.LastIndexOf('/');
+        _currentPath = idx >= 0 ? _currentPath.Substring(0, idx) : "";
+        RefreshView();
+    }
+
     private async void EntryList_DragItemsStarting(object sender, DragItemsStartingEventArgs e)
     {
         if (_archivePath == null) return;
 
         var entries = e.Items.OfType<ArchiveEntry>().Where(x => !x.IsDirectory).ToList();
-        if (entries.Count == 0)
-        {
-            e.Cancel = true;
-            return;
-        }
+        if (entries.Count == 0) { e.Cancel = true; return; }
 
-        var tempDir = Path.Combine(
-            Path.GetTempPath(),
-            "SevenZipApp_Drag",
-            Guid.NewGuid().ToString("N"));
+        var tempDir = Path.Combine(Path.GetTempPath(), "SevenZipApp_Drag", Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(tempDir);
 
         var files = new List<StorageFile>();
@@ -84,12 +134,10 @@ public sealed partial class ArchivePreviewPage : Page
             {
                 try
                 {
-                    var safeName = Path.GetFileName(entry.Name);
-                    var outPath = Path.Combine(tempDir, safeName);
-
+                    var outPath = Path.Combine(tempDir, Path.GetFileName(entry.Name));
                     using (var fs = File.Create(outPath))
                     {
-                        extractor.ExtractFile(entry.Name, fs);
+                        extractor.ExtractFile(entry.FullPath, fs);
                     }
 
                     if (File.Exists(outPath))
@@ -114,9 +162,6 @@ public sealed partial class ArchivePreviewPage : Page
             e.Data.SetStorageItems(files);
             e.Data.RequestedOperation = DataPackageOperation.Copy;
         }
-        else
-        {
-            e.Cancel = true;
-        }
+        else { e.Cancel = true; }
     }
 }

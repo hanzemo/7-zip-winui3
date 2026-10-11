@@ -15,20 +15,19 @@
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
 
-        <StackPanel Grid.Row="0" Margin="0,0,0,12">
-            <TextBlock x:Name="ArchivePathText"
-                       Style="{StaticResource BodyStrongTextBlockStyle}"
-                       Text="未加载"/>
-            <TextBlock x:Name="HintText"
-                       Margin="0,4,0,0"
-                       Foreground="Gray"
-                       Text="提示：可多选后拖出文件到资源管理器，自动解压"/>
+        <StackPanel Grid.Row="0" Orientation="Horizontal" Spacing="12" Margin="0,0,0,12">
+            <Button x:Name="GoUpButton" Content="↑ 返回上级" Click="GoUp_Click" Visibility="Collapsed"/>
+            <TextBlock x:Name="ArchivePathText" VerticalAlignment="Center"
+                       Style="{StaticResource BodyStrongTextBlockStyle}" Text="未加载"/>
+            <TextBlock x:Name="CurrentPathText" VerticalAlignment="Center"
+                       Foreground="Gray" Text=""/>
         </StackPanel>
 
         <ListView x:Name="EntryList"
                   Grid.Row="1"
                   CanDragItems="True"
                   DragItemsStarting="EntryList_DragItemsStarting"
+                  DoubleTapped="EntryList_DoubleTapped"
                   SelectionMode="Extended">
             <ListView.ItemTemplate>
                 <DataTemplate x:DataType="local:ArchiveEntry">
@@ -38,7 +37,10 @@
                             <ColumnDefinition Width="100"/>
                             <ColumnDefinition Width="150"/>
                         </Grid.ColumnDefinitions>
-                        <TextBlock Grid.Column="0" Text="{x:Bind Name}"/>
+                        <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="8">
+                            <FontIcon Glyph="{x:Bind IconGlyph}" FontSize="16"/>
+                            <TextBlock Text="{x:Bind Name}" VerticalAlignment="Center"/>
+                        </StackPanel>
                         <TextBlock Grid.Column="1" Text="{x:Bind SizeText}"/>
                         <TextBlock Grid.Column="2" Text="{x:Bind ModifiedText}"/>
                     </Grid>
