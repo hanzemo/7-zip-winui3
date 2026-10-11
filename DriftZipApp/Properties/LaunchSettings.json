@@ -1,0 +1,54 @@
+{
+  "packageName": "DriftZipApp",
+  "displayName": "DriftZip",
+  "publisher": "CN=12345678-1234-1234-1234-123456789012",
+  "identityName": "DriftZipApp",
+  "mainProcess": "DriftZipApp.exe",
+  "isolationProperties": "ReturnsAllowed",
+  "appListEntries": [
+    {
+      "executableName": "DriftZipApp.exe"
+    }
+  ],
+  "resources": {
+    "DefaultLocale": {
+      "displayName": "$(()$(rootNamespace).App.DisplayName)",
+      "description": "$(()$(rootNamespace).App.Description)",
+      "packageLogo": "Assets\\SevenZipWinUI.png"
+    }
+  },
+  "capabilities": "Internet(ConsumerEnterprise)",
+  "build": {
+    "x64": {
+      "debug": {
+        "true": {
+          "output": "x64\\Debug\\net8.0-windows10.0.22621.0\\win10-x64\\app\\",
+          "msiInstaller": true
+        }
+      }
+    },
+    "x86": {
+      "debug": {
+        "true": {
+          "output": "x86\\Debug\\net8.0-windows10.0.22621.0\\win10-x86\\app\\",
+          "msiInstaller": true
+        }
+      }
+    },
+    "ARM64": {
+      "debug": {
+        "true": {
+          "output": "arm64\\Debug\\net8.0-windows10.0.22621.0\\win10-arm64\\app\\",
+          "msiInstaller": true
+        }
+      }
+    },
+    "release": {
+      "true": {
+        "output": "release",
+        "msiInstaller": true
+      }
+    }
+  },
+  "index": 0
+}

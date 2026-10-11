@@ -1,0 +1,58 @@
+<!--
+SPDX-License-Identifier: GPL-2.0-or-later
+-->
+<Page
+    x:Class="DriftZipApp.Pages.ExtractPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d"
+    Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <CommandBar Grid.Row="0" DefaultLabelPosition="Right" Padding="8,0,8,0">
+            <AppBarButton Label="解压" Click="Extract_Click"/>
+            <AppBarButton Label="取消" Click="Cancel_Click"/>
+        </CommandBar>
+
+        <ScrollViewer Grid.Row="1">
+            <StackPanel Padding="16">
+                <TextBlock Text="选择压缩包" Style="{StaticResource SubtitleTextBlockStyle}" Margin="0,0,0,8"/>
+                <Grid Margin="0,0,0,16">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <TextBox Grid.Column="0" x:Name="ArchivePathBox" PlaceholderText="压缩包路径" IsReadOnly="True"/>
+                    <Button Grid.Column="1" Content="选择文件" Click="SelectArchive_Click" Margin="8,0,0,0"/>
+                </Grid>
+
+                <TextBlock Text="解压到" Style="{StaticResource SubtitleTextBlockStyle}" Margin="0,0,0,8"/>
+                <Grid Margin="0,0,0,16">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <TextBox Grid.Column="0" x:Name="ExtractToBox" PlaceholderText="目标目录" IsReadOnly="True"/>
+                    <Button Grid.Column="1" Content="选择文件夹" Click="SelectOutput_Click" Margin="8,0,0,0"/>
+                </Grid>
+
+                <TextBlock Text="密码 (可选)" Style="{StaticResource SubtitleTextBlockStyle}" Margin="0,0,0,8"/>
+                <PasswordBox x:Name="PasswordBox" PlaceholderText="输入密码" Margin="0,0,0,16"/>
+            </StackPanel>
+        </ScrollViewer>
+
+        <TextBlock Grid.Row="2"
+                   x:Name="StatusTextBlock"
+                   Text="准备解压"
+                   Foreground="{ThemeResource TextFillColorPrimary}"
+                   Padding="8,8,8,8"/>
+    </Grid>
+</Page>

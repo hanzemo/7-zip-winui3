@@ -1,0 +1,88 @@
+<!--
+SPDX-License-Identifier: GPL-2.0-or-later
+-->
+<Page
+    x:Class="DriftZipApp.Pages.CompressPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d"
+    Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <CommandBar Grid.Row="0" DefaultLabelPosition="Right" Padding="8,0,8,0">
+            <AppBarButton Label="压缩" Click="Compress_Click"/>
+            <AppBarButton Label="取消" Click="Cancel_Click"/>
+        </CommandBar>
+
+        <ScrollViewer Grid.Row="1">
+            <StackPanel Padding="16">
+                <TextBlock Text="选择文件" Style="{StaticResource SubtitleTextBlockStyle}" Margin="0,0,0,8"/>
+                <Grid Margin="0,0,0,16">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <TextBox Grid.Column="0"
+                             x:Name="FilesText"
+                             PlaceholderText="未选择文件"
+                             IsReadOnly="True"/>
+                    <Button Grid.Column="1" Content="选择文件" Click="SelectFiles_Click" Margin="8,0,0,0"/>
+                </Grid>
+
+                <TextBlock Text="输出路径" Style="{StaticResource SubtitleTextBlockStyle}" Margin="0,0,0,8"/>
+                <Grid Margin="0,0,0,16">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <TextBox Grid.Column="0"
+                             x:Name="OutputPath"
+                             PlaceholderText="例如：C:\backup\archive.7z"/>
+                    <Button Grid.Column="1" Content="另存为..." Click="SelectOutput_Click" Margin="8,0,0,0"/>
+                </Grid>
+
+                <TextBlock Text="压缩格式" Style="{StaticResource SubtitleTextBlockStyle}" Margin="0,0,0,8"/>
+                <ComboBox x:Name="FormatCombo" Margin="0,0,0,16">
+                    <ComboBoxItem Content="7z" IsSelected="True"/>
+                    <ComboBoxItem Content="zip"/>
+                    <ComboBoxItem Content="tar"/>
+                    <ComboBoxItem Content="gz"/>
+                    <ComboBoxItem Content="bz2"/>
+                    <ComboBoxItem Content="xz"/>
+                </ComboBox>
+
+                <TextBlock Text="压缩级别" Style="{StaticResource SubtitleTextBlockStyle}" Margin="0,0,0,8"/>
+                <ComboBox x:Name="LevelCombo" Margin="0,0,0,16">
+                    <ComboBoxItem Content="0 - 存储"/>
+                    <ComboBoxItem Content="1 - 最快"/>
+                    <ComboBoxItem Content="3 - 快速"/>
+                    <ComboBoxItem Content="5 - 正常" IsSelected="True"/>
+                    <ComboBoxItem Content="7 - 最大"/>
+                    <ComboBoxItem Content="9 - 超压"/>
+                </ComboBox>
+
+                <CheckBox x:Name="SolidCheck" IsChecked="True" Content="固实压缩" Margin="0,0,0,8"/>
+                <CheckBox x:Name="MultiThreadCheck" IsChecked="True" Content="多线程压缩" Margin="0,0,0,8"/>
+
+                <CheckBox x:Name="EncryptCheck" IsChecked="False" Content="加密" Margin="0,8,0,8"/>
+                <PasswordBox x:Name="PasswordBox"
+                             PlaceholderText="密码 (可选)"
+                             Margin="0,0,0,16"/>
+            </StackPanel>
+        </ScrollViewer>
+
+        <TextBlock Grid.Row="2"
+                   x:Name="StatusTextBlock"
+                   Text="准备压缩"
+                   Foreground="{ThemeResource TextFillColorPrimary}"
+                   Padding="8,8,8,8"/>
+    </Grid>
+</Page>

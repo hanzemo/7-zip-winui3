@@ -1,0 +1,4 @@
+LIBRARY DriftZipShellExt
+EXPORTS
+    DllGetClassObject PRIVATE
+    DllCanUnloadNow   PRIVATE

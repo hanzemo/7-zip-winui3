@@ -35,13 +35,13 @@ jobs:
           Export-Certificate -Cert $cert -FilePath "${{ github.workspace }}\cert\DailyFortune.cer"
 
       - name: Restore
-        run: dotnet restore SevenZipApp/SevenZipApp.csproj -r win-x64
+        run: dotnet restore DriftZipApp/DriftZipApp.csproj -r win-x64
 
       # ⬇️ 新增：编译 C++ shell 扩展
       - name: Build C++ shell extension
         shell: cmd
         run: |
-          msbuild SevenZipShellExt\SevenZipShellExt.vcxproj ^
+          msbuild DriftZipShellExt\DriftZipShellExt.vcxproj ^
             /t:Build ^
             /p:Configuration=Release ^
             /p:Platform=x64 ^
@@ -50,7 +50,7 @@ jobs:
       - name: Build MSIX
         shell: cmd
         run: |
-          msbuild SevenZipApp\SevenZipApp.csproj ^
+          msbuild DriftZipApp\DriftZipApp.csproj ^
             /t:Rebuild ^
             /p:Configuration=Release ^
             /p:Platform=x64 ^
@@ -64,7 +64,7 @@ jobs:
       - name: Upload
         uses: actions/upload-artifact@v4
         with:
-          name: SevenZipApp-SignedMSIX
+          name: DriftZipApp-SignedMSIX
           path: |
             **/*.msix
             cert/DailyFortune.cer
