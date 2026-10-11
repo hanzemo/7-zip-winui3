@@ -25,7 +25,7 @@ SPDX-License-Identifier: GPL-2.0-or-later
 
         <ListView Grid.Row="1"
                   x:Name="FilesListView"
-                  ItemsSource="{x:Bind ViewModel.Items, Mode=OneWay}"
+                  ItemsSource="{x:Bind ViewModel.Items, Mode=OneTime}"
                   SelectionMode="Single"
                   ItemClick="FilesListView_ItemClick"
                   IsItemClickEnabled="True"
@@ -45,18 +45,18 @@ SPDX-License-Identifier: GPL-2.0-or-later
                             </Grid.ColumnDefinitions>
 
                             <FontIcon Grid.Column="0"
-                                      Glyph="{x:Bind IconGlyph, Mode=OneWay}"
+                                      Glyph="{x:Bind IconGlyph, Mode=OneTime}"
                                       FontFamily="{ThemeResource SymbolThemeFontFamily}"
                                       Margin="0,0,12,0"/>
 
                             <TextBlock Grid.Column="1"
-                                       Text="{x:Bind Name, Mode=OneWay}"
+                                       Text="{x:Bind Name, Mode=OneTime}"
                                        TextWrapping="Wrap"
                                        FontSize="14"
                                        FontWeight="SemiBold"/>
 
                             <TextBlock Grid.Column="2"
-                                       Text="{x:Bind SizeDisplay, Mode=OneWay}"
+                                       Text="{x:Bind SizeDisplay, Mode=OneTime}"
                                        FontSize="12"
                                        Foreground="{ThemeResource TextFillColorSecondary}"/>
                         </Grid>
@@ -67,7 +67,7 @@ SPDX-License-Identifier: GPL-2.0-or-later
 
         <TextBlock Grid.Row="2"
                    x:Name="StatusTextBlock"
-                   Text="{x:Bind ViewModel.StatusMessage, Mode=OneWay}"
+                   Text="{x:Bind ViewModel.StatusMessage, Mode=OneTime}"
                    Foreground="{ThemeResource TextFillColorPrimary}"
                    Padding="8,8,8,8"/>
     </Grid>

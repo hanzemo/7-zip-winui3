@@ -37,5 +37,8 @@ public class ArchiveItem
         ? ""
         : Modified.ToString("yyyy-MM-dd HH:mm");
 
+    // 兼容 FilesPage 里绑定的旧属性名
+    public string SizeDisplay => SizeText;
+
     public string IconGlyph => IsDirectory ? "\uE8B7" : "\uE8A5";
 }
