@@ -56,6 +56,7 @@
   <ItemGroup>
     <ClCompile Include="dllmain.cpp" />
     <ClCompile Include="guids.cpp" />
+    <ResourceCompile Include="DriftZipShellExt.rc" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="guids.h" />

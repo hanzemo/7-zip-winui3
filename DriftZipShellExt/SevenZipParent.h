@@ -16,6 +16,17 @@ public:
     { return SHStrDupW(L"DriftZip", ppszName); }
 
     IFACEMETHODIMP GetIcon(IShellItemArray*, LPWSTR* ppszIcon) override
+    {
+        wchar_t modulePath[MAX_PATH]{};
+        HMODULE hSelf = nullptr;
+        GetModuleHandleExW(
+            GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS | GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS | GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT,
+            reinterpret_cast<LPCWSTR>(&GetIcon), &hSelf);
+        GetModuleFileNameW(hSelf, modulePath, MAX_PATH);
+
+        std::wstring iconRef = std::wstring(modulePath) + L",-1";
+        return SHStrDupW(iconRef.c_str(), ppszIcon);
+    }
     { *ppszIcon = nullptr; return E_NOTIMPL; }
 
     IFACEMETHODIMP GetToolTip(IShellItemArray*, LPWSTR* ppszInfotip) override
