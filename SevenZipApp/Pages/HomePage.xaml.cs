@@ -22,6 +22,7 @@ public sealed partial class HomePage : Page
     public HomePage()
     {
         this.InitializeComponent();
+        this.Loaded += (s, e) => ViewModel.RefreshCommand.Execute(null);
         this.DataContext = ViewModel;
 
         Logger.Info("HomePage 初始化完成", "HomePage");
@@ -35,6 +36,22 @@ public sealed partial class HomePage : Page
         Logger.Info($"选择归档：{selectedItem.Name}", "HomePage");
         ViewModel.SelectedArchive = selectedItem;
         ViewModel.StatusMessage = $"已选择：{selectedItem.Name}";
+    }
+
+    private void ArchiveGridView_DoubleTapped(object sender, Microsoft.UI.Xaml.Input.DoubleTappedRoutedEventArgs e)
+    {
+        if (ArchiveGridView.SelectedItem is ArchiveItem item && !string.IsNullOrEmpty(item.Path))
+        {
+            this.Frame.Navigate(typeof(ArchivePreviewPage), item.Path);
+        }
+    }
+
+    private void ArchiveGridView_DoubleTapped(object sender, Microsoft.UI.Xaml.Input.DoubleTappedRoutedEventArgs e)
+    {
+        if (ArchiveGridView.SelectedItem is ArchiveItem item && !string.IsNullOrEmpty(item.Path))
+        {
+            this.Frame.Navigate(typeof(ArchivePreviewPage), item.Path);
+        }
     }
 
     private void Open_Click(object sender, RoutedEventArgs e)

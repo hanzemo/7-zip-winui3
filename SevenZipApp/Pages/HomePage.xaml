@@ -29,6 +29,7 @@ SPDX-License-Identifier: GPL-2.0-or-later
                   ItemsSource="{x:Bind ViewModel.ArchiveItems, Mode=OneWay}"
                   SelectionMode="Single"
                   ItemClick="ArchiveGridView_ItemClick"
+          DoubleTapped="ArchiveGridView_DoubleTapped"
                   IsItemClickEnabled="True"
                   Padding="16">
             <GridView.ItemsPanel>
