@@ -45,7 +45,7 @@ SPDX-License-Identifier: GPL-2.0-or-later
 
             <NavigationView.MenuItems>
                 <NavigationViewItem Icon="Home" Content="主页" Tag="Home"/>
-                <NavigationViewItem Icon="ZipFolder" Content="压缩" Tag="Compress"/>
+                <NavigationViewItem Icon="Folder" Content="压缩" Tag="Compress"/>
                 <NavigationViewItem Icon="Refresh" Content="解压" Tag="Extract"/>
                 <NavigationViewItem Icon="DocumentLibrary" Content="文件查看" Tag="FileExplorer"/>
                 <NavigationViewItem Icon="Folder" Content="归档" Tag="Archive"/>
