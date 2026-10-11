@@ -144,6 +144,69 @@ public sealed partial class ArchivePreviewPage : Page
         }
     }
 
+    private async void ExtractEntryTo_Click(object sender, RoutedEventArgs e)
+    {
+        var entries = EntryList.SelectedItems.OfType<ArchiveEntry>().Where(x => !x.IsDirectory).ToList();
+        if (entries.Count == 0) return;
+        if (_archivePath == null) return;
+
+        var folder = new Windows.Storage.Pickers.FolderPicker();
+        var hwnd = WinRT.Interop.WindowNative.GetWindowHandle(App.MainWindow);
+        WinRT.Interop.InitializeWithWindow.Initialize(folder, hwnd);
+        folder.FileTypeFilter.Add("*");
+        var target = await folder.PickSingleFolderAsync();
+        if (target == null) return;
+
+        try
+        {
+            using var extractor = new SharpSevenZipExtractor(_archivePath);
+            foreach (var entry in entries)
+            {
+                var outPath = System.IO.Path.Combine(target.Path, System.IO.Path.GetFileName(entry.Name));
+                using (var fs = System.IO.File.Create(outPath))
+                {
+                    extractor.ExtractFile(entry.FullPath, fs);
+                }
+            }
+            Logger.Info($"解压 {entries.Count} 项到 {target.Path}", "ArchivePreviewPage");
+        }
+        catch (Exception ex) { Logger.Error($"解压失败: {ex.Message}", "ArchivePreviewPage"); }
+    }
+
+    private void ExtractEntryHere_Click(object sender, RoutedEventArgs e)
+    {
+        var entries = EntryList.SelectedItems.OfType<ArchiveEntry>().Where(x => !x.IsDirectory).ToList();
+        if (entries.Count == 0) return;
+        if (_archivePath == null) return;
+
+        var targetDir = System.IO.Path.GetDirectoryName(_archivePath);
+        if (string.IsNullOrEmpty(targetDir)) return;
+
+        try
+        {
+            using var extractor = new SharpSevenZipExtractor(_archivePath);
+            foreach (var entry in entries)
+            {
+                var outPath = System.IO.Path.Combine(targetDir, System.IO.Path.GetFileName(entry.Name));
+                using (var fs = System.IO.File.Create(outPath))
+                {
+                    extractor.ExtractFile(entry.FullPath, fs);
+                }
+            }
+        }
+        catch (Exception ex) { Logger.Error($"解压失败: {ex.Message}", "ArchivePreviewPage"); }
+    }
+
+    private void CopyEntryPath_Click(object sender, RoutedEventArgs e)
+    {
+        var entries = EntryList.SelectedItems.OfType<ArchiveEntry>().ToList();
+        if (entries.Count == 0) return;
+        var text = string.Join(System.Environment.NewLine, entries.Select(x => x.FullPath));
+        var dp = new Windows.ApplicationModel.DataTransfer.DataPackage();
+        dp.SetText(text);
+        Windows.ApplicationModel.DataTransfer.Clipboard.SetContent(dp);
+    }
+
     private void GoUp_Click(object sender, RoutedEventArgs e)
     {
         var current = _currentPath.Trim('/');

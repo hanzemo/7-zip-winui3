@@ -37,6 +37,16 @@ jobs:
       - name: Restore
         run: dotnet restore SevenZipApp/SevenZipApp.csproj -r win-x64
 
+      # ⬇️ 新增：编译 C++ shell 扩展
+      - name: Build C++ shell extension
+        shell: cmd
+        run: |
+          msbuild SevenZipShellExt\SevenZipShellExt.vcxproj ^
+            /t:Build ^
+            /p:Configuration=Release ^
+            /p:Platform=x64 ^
+            /v:minimal
+
       - name: Build MSIX
         shell: cmd
         run: |

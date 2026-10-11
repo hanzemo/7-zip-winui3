@@ -29,6 +29,14 @@
                   DragItemsStarting="EntryList_DragItemsStarting"
                   DoubleTapped="EntryList_DoubleTapped"
                   SelectionMode="Extended">
+            <ListView.ContextFlyout>
+                <MenuFlyout>
+                    <MenuFlyoutItem Text="解压到…" Click="ExtractEntryTo_Click"/>
+                    <MenuFlyoutItem Text="解压到此目录" Click="ExtractEntryHere_Click"/>
+                    <MenuFlyoutSeparator/>
+                    <MenuFlyoutItem Text="复制路径" Click="CopyEntryPath_Click"/>
+                </MenuFlyout>
+            </ListView.ContextFlyout>
             <ListView.ItemTemplate>
                 <DataTemplate x:DataType="local:ArchiveEntry">
                     <Grid Padding="8,4">

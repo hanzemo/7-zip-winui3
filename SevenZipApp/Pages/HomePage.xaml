@@ -81,6 +81,14 @@ SPDX-License-Identifier: GPL-2.0-or-later
 
             <GridView.ContextFlyout>
                 <MenuFlyout>
+            <MenuFlyoutSubItem Text="7-Zip">
+                <MenuFlyoutItem Text="解压到…" Click="ExtractTo_Click"/>
+                <MenuFlyoutItem Text="压缩到…" Click="CompressTo_Click"/>
+                <MenuFlyoutSeparator/>
+                <MenuFlyoutItem Text="解压到此目录" Click="ExtractHere_Click"/>
+                <MenuFlyoutItem Text="压缩到此目录" Click="CompressHere_Click"/>
+            </MenuFlyoutSubItem>
+            <MenuFlyoutSeparator/>
                     <MenuFlyoutSubItem Text="视图">
                         <MenuFlyoutItem Text="详细信息" Click="ViewMode_Click" Tag="Details"/>
                         <MenuFlyoutItem Text="大图标" Click="ViewMode_Click" Tag="LargeIcons"/>

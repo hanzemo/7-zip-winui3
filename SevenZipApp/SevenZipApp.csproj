@@ -38,4 +38,19 @@
     </AppxManifest>
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\SevenZipShellExt\SevenZipShellExt.vcxproj">
+      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+      <Private>false</Private>
+    </ProjectReference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackagingOutputs Include="..\SevenZipShellExt\$(Platform)\$(Configuration)\SevenZipShellExt.dll">
+      <ProjectName>SevenZipShellExt</ProjectName>
+      <TargetPath>SevenZipShellExt.dll</TargetPath>
+      <OutputGroup>BuiltProjectOutputGroup</OutputGroup>
+    </PackagingOutputs>
+  </ItemGroup>
+
 </Project>

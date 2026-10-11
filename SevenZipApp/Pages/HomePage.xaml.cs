@@ -112,6 +112,109 @@ public sealed partial class HomePage : Page
     }
 
     // 右键菜单
+    private async void ExtractTo_Click(object sender, RoutedEventArgs e)
+    {
+        var items = ArchiveGridView.SelectedItems.OfType<ArchiveItem>().ToList();
+        if (items.Count == 0) { if (ArchiveGridView.SelectedItem is ArchiveItem s) items.Add(s); }
+        if (items.Count == 0) return;
+
+        var folder = new Windows.Storage.Pickers.FolderPicker();
+        var hwnd = WinRT.Interop.WindowNative.GetWindowHandle(App.MainWindow);
+        WinRT.Interop.InitializeWithWindow.Initialize(folder, hwnd);
+        folder.FileTypeFilter.Add("*");
+        var target = await folder.PickSingleFolderAsync();
+        if (target == null) return;
+
+        var engine = new SevenZipEngine();
+        foreach (var item in items)
+        {
+            if (string.IsNullOrEmpty(item.Path)) continue;
+            if (item.IsDirectory) continue;
+            try { engine.Extract(item.Path, target.Path, null, null, System.Threading.CancellationToken.None); }
+            catch (Exception ex) { ViewModel.StatusMessage = $"解压失败: {ex.Message}"; }
+        }
+        ViewModel.StatusMessage = $"解压完成：{items.Count} 项";
+        ViewModel.Refresh();
+    }
+
+    private async void CompressTo_Click(object sender, RoutedEventArgs e)
+    {
+        var items = ArchiveGridView.SelectedItems.OfType<ArchiveItem>().ToList();
+        if (items.Count == 0) { if (ArchiveGridView.SelectedItem is ArchiveItem s) items.Add(s); }
+        if (items.Count == 0) return;
+
+        var save = new Windows.Storage.Pickers.FileSavePicker();
+        save.SuggestedFileName = "archive";
+        save.FileTypeChoices.Add("7z", new[] { ".7z" });
+        save.FileTypeChoices.Add("zip", new[] { ".zip" });
+        var hwnd = WinRT.Interop.WindowNative.GetWindowHandle(App.MainWindow);
+        WinRT.Interop.InitializeWithWindow.Initialize(save, hwnd);
+        var file = await save.PickSaveFileAsync();
+        if (file == null) return;
+
+        var options = new CompressionOptions
+        {
+            Format = file.Path.EndsWith(".zip") ? OutputFormat.Zip : OutputFormat.SevenZip,
+            Level = CompressionLevel.Normal,
+            SourceFiles = items.Where(x => !string.IsNullOrEmpty(x.Path)).Select(x => x.Path!).ToList(),
+        };
+        try
+        {
+            var engine = new SevenZipEngine();
+            engine.Compress(options, file.Path, null, System.Threading.CancellationToken.None);
+            ViewModel.StatusMessage = $"压缩完成：{file.Path}";
+        }
+        catch (Exception ex) { ViewModel.StatusMessage = $"压缩失败: {ex.Message}"; }
+        ViewModel.Refresh();
+    }
+
+    private void ExtractHere_Click(object sender, RoutedEventArgs e)
+    {
+        var items = ArchiveGridView.SelectedItems.OfType<ArchiveItem>().ToList();
+        if (items.Count == 0) { if (ArchiveGridView.SelectedItem is ArchiveItem s) items.Add(s); }
+        if (items.Count == 0) return;
+
+        var engine = new SevenZipEngine();
+        foreach (var item in items)
+        {
+            if (string.IsNullOrEmpty(item.Path)) continue;
+            if (item.IsDirectory) continue;
+            var dir = Path.GetDirectoryName(item.Path)!;
+            try { engine.Extract(item.Path, dir, null, null, System.Threading.CancellationToken.None); }
+            catch (Exception ex) { ViewModel.StatusMessage = $"解压失败: {ex.Message}"; }
+        }
+        ViewModel.StatusMessage = "已解压到当前目录";
+        ViewModel.Refresh();
+    }
+
+    private void CompressHere_Click(object sender, RoutedEventArgs e)
+    {
+        var items = ArchiveGridView.SelectedItems.OfType<ArchiveItem>().ToList();
+        if (items.Count == 0) { if (ArchiveGridView.SelectedItem is ArchiveItem s) items.Add(s); }
+        if (items.Count == 0) return;
+
+        var first = items.First().Path;
+        if (string.IsNullOrEmpty(first)) return;
+        var dir = Path.GetDirectoryName(first)!;
+        var name = items.Count == 1 ? Path.GetFileNameWithoutExtension(first) : "archive";
+        var output = Path.Combine(dir, name + ".7z");
+
+        var options = new CompressionOptions
+        {
+            Format = OutputFormat.SevenZip,
+            Level = CompressionLevel.Normal,
+            SourceFiles = items.Where(x => !string.IsNullOrEmpty(x.Path)).Select(x => x.Path!).ToList(),
+        };
+        try
+        {
+            var engine = new SevenZipEngine();
+            engine.Compress(options, output, null, System.Threading.CancellationToken.None);
+            ViewModel.StatusMessage = $"压缩完成：{output}";
+        }
+        catch (Exception ex) { ViewModel.StatusMessage = $"压缩失败: {ex.Message}"; }
+        ViewModel.Refresh();
+    }
+
     private void Open_Click(object sender, RoutedEventArgs e)
     {
         if (ArchiveGridView.SelectedItem is ArchiveItem item)
