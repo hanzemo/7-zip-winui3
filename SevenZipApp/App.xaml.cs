@@ -2,6 +2,7 @@
 
 using Microsoft.UI.Xaml;
 using System;
+using System.IO;
 using Windows.ApplicationModel.Activation;
 
 namespace SevenZipApp;
@@ -35,7 +36,7 @@ public partial class App : Application
             MainWindow.Activate();
 
             HandleActivation();
-
+            HandleCommandLine();
         }
         catch (Exception ex)
         {
@@ -65,6 +66,29 @@ public partial class App : Application
         catch (Exception ex)
         {
             Program.WriteCrashLog("App.HandleActivation", ex);
+        }
+    }
+
+    private static void HandleCommandLine()
+    {
+        try
+        {
+            var args = Environment.GetCommandLineArgs();
+            Program.WriteCrashLog("App.HandleCommandLine.Called", new Exception(string.Join(" | ", args)));
+
+            if (args.Length < 3) return;
+
+            var verb = args[1];
+            var target = args[2];
+
+            if (string.IsNullOrEmpty(verb)) return;
+            if (!File.Exists(target) && !Directory.Exists(target)) return;
+
+            (MainWindow as Views.MainWindow)?.HandleShellCommand(verb, target);
+        }
+        catch (Exception ex)
+        {
+            Program.WriteCrashLog("App.HandleCommandLine", ex);
         }
     }
 }

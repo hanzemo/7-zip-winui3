@@ -11,30 +11,17 @@ class SubCommandBase : public RuntimeClass<RuntimeClassFlags<ClassicCom>, IExplo
 {
 public:
     IFACEMETHODIMP EnumSubCommands(IEnumExplorerCommand** ppEnum) override
-    {
-        *ppEnum = nullptr;
-        return E_NOTIMPL;
-    }
+    { *ppEnum = nullptr; return E_NOTIMPL; }
     IFACEMETHODIMP GetIcon(IShellItemArray*, LPWSTR* ppszIcon) override
-    {
-        *ppszIcon = nullptr; return E_NOTIMPL;
-    }
+    { *ppszIcon = nullptr; return E_NOTIMPL; }
     IFACEMETHODIMP GetToolTip(IShellItemArray*, LPWSTR* ppszInfotip) override
-    {
-        *ppszInfotip = nullptr; return E_NOTIMPL;
-    }
+    { *ppszInfotip = nullptr; return E_NOTIMPL; }
     IFACEMETHODIMP GetCanonicalName(GUID* pguidCommandName) override
-    {
-        *pguidCommandName = GUID_NULL; return E_NOTIMPL;
-    }
+    { *pguidCommandName = GUID_NULL; return E_NOTIMPL; }
     IFACEMETHODIMP GetState(IShellItemArray*, BOOL, EXPCMDSTATE* pCmdState) override
-    {
-        *pCmdState = ECS_ENABLED; return S_OK;
-    }
+    { *pCmdState = ECS_ENABLED; return S_OK; }
     IFACEMETHODIMP GetFlags(EXPCMDFLAGS* pFlags) override
-    {
-        *pFlags = ECF_DEFAULT; return S_OK;
-    }
+    { *pFlags = ECF_DEFAULT; return S_OK; }
 
 protected:
     static std::wstring GetFirstPath(IShellItemArray* items)
@@ -81,7 +68,7 @@ class ExtractToCommand : public SubCommandBase
 {
 public:
     IFACEMETHODIMP GetTitle(IShellItemArray*, LPWSTR* ppszName) override
-    { return SHStrDupW(L"解压到…", ppszName); }
+    { return SHStrDupW(L"\u89e3\u538b\u5230\u2026", ppszName); }
     IFACEMETHODIMP Invoke(IShellItemArray* items, IBindCtx*) override
     {
         auto path = GetFirstPath(items);
@@ -95,7 +82,7 @@ class CompressToCommand : public SubCommandBase
 {
 public:
     IFACEMETHODIMP GetTitle(IShellItemArray*, LPWSTR* ppszName) override
-    { return SHStrDupW(L"压缩到…", ppszName); }
+    { return SHStrDupW(L"\u538b\u7f29\u5230\u2026", ppszName); }
     IFACEMETHODIMP Invoke(IShellItemArray* items, IBindCtx*) override
     {
         auto path = GetFirstPath(items);
@@ -109,7 +96,7 @@ class ExtractHereCommand : public SubCommandBase
 {
 public:
     IFACEMETHODIMP GetTitle(IShellItemArray*, LPWSTR* ppszName) override
-    { return SHStrDupW(L"解压到此目录", ppszName); }
+    { return SHStrDupW(L"\u89e3\u538b\u5230\u6b64\u76ee\u5f55", ppszName); }
     IFACEMETHODIMP Invoke(IShellItemArray* items, IBindCtx*) override
     {
         auto path = GetFirstPath(items);
@@ -123,7 +110,7 @@ class CompressHereCommand : public SubCommandBase
 {
 public:
     IFACEMETHODIMP GetTitle(IShellItemArray*, LPWSTR* ppszName) override
-    { return SHStrDupW(L"压缩到此目录", ppszName); }
+    { return SHStrDupW(L"\u538b\u7f29\u5230\u6b64\u76ee\u5f55", ppszName); }
     IFACEMETHODIMP Invoke(IShellItemArray* items, IBindCtx*) override
     {
         auto path = GetFirstPath(items);
