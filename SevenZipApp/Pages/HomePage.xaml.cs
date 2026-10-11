@@ -46,13 +46,6 @@ public sealed partial class HomePage : Page
         }
     }
 
-    private void ArchiveGridView_DoubleTapped(object sender, Microsoft.UI.Xaml.Input.DoubleTappedRoutedEventArgs e)
-    {
-        if (ArchiveGridView.SelectedItem is ArchiveItem item && !string.IsNullOrEmpty(item.Path))
-        {
-            this.Frame.Navigate(typeof(ArchivePreviewPage), item.Path);
-        }
-    }
 
     private void Open_Click(object sender, RoutedEventArgs e)
     {
