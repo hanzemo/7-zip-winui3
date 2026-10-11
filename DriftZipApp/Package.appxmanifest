@@ -61,7 +61,7 @@
             </uap:Extension>
         <com:Extension Category="windows.comServer">
           <com:ComServer>
-            <com:SurrogateServer DisplayName="SevenZip Shell Ext">
+            <com:SurrogateServer DisplayName="DriftZip Shell Ext">
               <com:Class Id="52fee838-baff-69c1-b6ab-022c2afd7368" Path="DriftZipShellExt.dll" ThreadingModel="STA" />
             </com:SurrogateServer>
           </com:ComServer>
@@ -69,13 +69,13 @@
         <desktop4:Extension Category="windows.fileExplorerContextMenus">
           <desktop4:FileExplorerContextMenus>
             <desktop5:ItemType Type="*">
-              <desktop5:Verb Id="0000SevenZip" Clsid="52fee838-baff-69c1-b6ab-022c2afd7368" />
+              <desktop5:Verb Id="0000DriftZip" Clsid="52fee838-baff-69c1-b6ab-022c2afd7368" />
             </desktop5:ItemType>
             <desktop5:ItemType Type="Directory">
-              <desktop5:Verb Id="0000SevenZip" Clsid="52fee838-baff-69c1-b6ab-022c2afd7368" />
+              <desktop5:Verb Id="0000DriftZip" Clsid="52fee838-baff-69c1-b6ab-022c2afd7368" />
             </desktop5:ItemType>
             <desktop5:ItemType Type="Directory\Background">
-              <desktop5:Verb Id="0000SevenZip" Clsid="52fee838-baff-69c1-b6ab-022c2afd7368" />
+              <desktop5:Verb Id="0000DriftZip" Clsid="52fee838-baff-69c1-b6ab-022c2afd7368" />
             </desktop5:ItemType>
           </desktop4:FileExplorerContextMenus>
         </desktop4:Extension>

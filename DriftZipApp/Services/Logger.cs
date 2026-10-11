@@ -24,12 +24,12 @@ public static class Logger
         {
             _logPath = SafeCreate(
                     Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-                                 "DriftZipApp", "logs", "SevenZipLog.txt"))
+                                 "DriftZipApp", "logs", "DriftZipLog.txt"))
                 ?? SafeCreate(
                     Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments),
-                                 "DriftZipApp", "logs", "SevenZipLog.txt"))
+                                 "DriftZipApp", "logs", "DriftZipLog.txt"))
                 ?? Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-                                "DriftZipApp", "logs", "SevenZipLog.txt");
+                                "DriftZipApp", "logs", "DriftZipLog.txt");
         }
 
         try

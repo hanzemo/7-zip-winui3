@@ -14,7 +14,7 @@
     "DefaultLocale": {
       "displayName": "$(()$(rootNamespace).App.DisplayName)",
       "description": "$(()$(rootNamespace).App.Description)",
-      "packageLogo": "Assets\\SevenZipWinUI.png"
+      "packageLogo": "Assets\\DriftZipWinUI.png"
     }
   },
   "capabilities": "Internet(ConsumerEnterprise)",

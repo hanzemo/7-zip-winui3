@@ -14,7 +14,7 @@ using SharpSevenZip;
 namespace DriftZipApp;
 
 /// <summary>
-/// 7-Zip 引擎：负责所有压缩与解压操作。
+/// DriftZip 引擎：负责所有压缩与解压操作。
 /// </summary>
 public sealed class DriftZipEngine
 {
@@ -175,7 +175,7 @@ public sealed class DriftZipEngine
 }
 
 /// <summary>
-/// 7-Zip 引擎错误。
+/// DriftZip 引擎错误。
 /// </summary>
 public sealed class SevenZipException : Exception
 {
