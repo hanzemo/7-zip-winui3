@@ -6,7 +6,7 @@
 using namespace Microsoft::WRL;
 
 template<typename T>
-class ClassFactory : public RuntimeClass<RuntimeClassFlags<ClassicCom>, IClassFactory>
+class SevenZipClassFactory : public RuntimeClass<RuntimeClassFlags<ClassicCom>, IClassFactory>
 {
 public:
     IFACEMETHODIMP CreateInstance(IUnknown* outer, REFIID riid, void** ppv) override
