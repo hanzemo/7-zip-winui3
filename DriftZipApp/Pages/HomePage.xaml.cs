@@ -4,6 +4,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Input;
+using Microsoft.UI.Xaml.Controls.Primitives;
 using DriftZipApp.Services;
 using System;
 using System.Collections.Generic;
@@ -26,8 +27,6 @@ public sealed partial class HomePage : Page
     // 右键点击的项（解决"不用先选中"）
     private ArchiveItem? _rightClickedItem;
 
-    // 当前进行中的操作（进度条用）
-    private CancellationTokenSource? _cts;
 
     public HomePage()
     {
