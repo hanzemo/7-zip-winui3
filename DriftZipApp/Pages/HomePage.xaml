@@ -51,6 +51,7 @@ SPDX-License-Identifier: GPL-2.0-or-later
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
+        <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
         <!-- 工具栏 -->
@@ -75,37 +76,12 @@ SPDX-License-Identifier: GPL-2.0-or-later
                   IsItemClickEnabled="True"
                   ItemClick="ArchiveGridView_ItemClick"
                   DoubleTapped="ArchiveGridView_DoubleTapped"
+                  RightTapped="ArchiveGridView_RightTapped"
                   ItemsSource="{x:Bind ViewModel.ArchiveItems, Mode=OneWay}"
                   SelectionMode="Extended"
                   ItemTemplate="{StaticResource LargeIconTemplate}">
 
-            <GridView.ContextFlyout>
-                <MenuFlyout>
-            <MenuFlyoutSubItem Text="DriftZip">
-                <MenuFlyoutItem Text="解压到…" Click="ExtractTo_Click"/>
-                <MenuFlyoutItem Text="压缩到…" Click="CompressTo_Click"/>
-                <MenuFlyoutSeparator/>
-                <MenuFlyoutItem Text="解压到此目录" Click="ExtractHere_Click"/>
-                <MenuFlyoutItem Text="压缩到此目录" Click="CompressHere_Click"/>
-            </MenuFlyoutSubItem>
-            <MenuFlyoutSeparator/>
-                    <MenuFlyoutSubItem Text="视图">
-                        <MenuFlyoutItem Text="详细信息" Click="ViewMode_Click" Tag="Details"/>
-                        <MenuFlyoutItem Text="大图标" Click="ViewMode_Click" Tag="LargeIcons"/>
-                        <MenuFlyoutItem Text="小图标" Click="ViewMode_Click" Tag="SmallIcons"/>
-                    </MenuFlyoutSubItem>
-                    <MenuFlyoutSeparator/>
-                    <MenuFlyoutItem Text="打开" Click="Open_Click"/>
-                    <MenuFlyoutItem Text="重命名" Click="Rename_Click"/>
-                    <MenuFlyoutItem Text="复制" Click="Copy_Click"/>
-                    <MenuFlyoutItem Text="剪切" Click="Cut_Click"/>
-                    <MenuFlyoutItem Text="粘贴" Click="Paste_Click"/>
-                    <MenuFlyoutItem Text="删除" Click="Delete_Click"/>
-                    <MenuFlyoutSeparator/>
-                    <MenuFlyoutItem Text="扫描压缩包" Click="BrowseMode_Click" Tag="ScanArchives"/>
-                    <MenuFlyoutItem Text="浏览此电脑" Click="BrowseMode_Click" Tag="ThisPC"/>
-                </MenuFlyout>
-            </GridView.ContextFlyout>
         </GridView>
+        <ProgressBar x:Name="OperationProgress" Grid.Row="3" VerticalAlignment="Bottom" Height="4" Visibility="Collapsed"/>
     </Grid>
 </Page>

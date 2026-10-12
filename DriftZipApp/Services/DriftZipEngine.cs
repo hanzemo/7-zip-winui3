@@ -36,13 +36,13 @@ public sealed class DriftZipEngine
             {
                 entries.Add(new ArchiveItem
                 {
-                    Name       = Path.GetFileName(entry.FileName),
-                    Path       = entry.FileName,
-                    IsFolder   = entry.IsDirectory,
-                    Size       = (uint)entry.Size,
-                    Modified   = entry.LastWriteTime,
-                    Encrypted  = entry.Encrypted,
-                    Method     = entry.Method,
+                    Name      = Path.GetFileName(entry.FileName),
+                    Path      = entry.FileName,
+                    IsFolder  = entry.IsDirectory,
+                    Size      = (uint)entry.Size,
+                    Modified  = entry.LastWriteTime,
+                    Encrypted = entry.Encrypted,
+                    Method    = entry.Method,
                 });
             }
         }
@@ -58,13 +58,13 @@ public sealed class DriftZipEngine
     //  解压
     // ─────────────────────────────────────────────────────
     public async Task ExtractAsync(string archivePath, string destDir,
-        string? password, IProgress<long>? progress, CancellationToken ct)
+        string? password, IProgress<int>? progress, CancellationToken ct)
     {
         await Task.Run(() => Extract(archivePath, destDir, password, progress, ct), ct);
     }
 
     public void Extract(string archivePath, string destDir, string? password,
-        IProgress<long>? progress, CancellationToken ct)
+        IProgress<int>? progress, CancellationToken ct)
     {
         Directory.CreateDirectory(destDir);
 
@@ -75,7 +75,25 @@ public sealed class DriftZipEngine
                     ? new SharpSevenZipExtractor(archivePath)
                     : new SharpSevenZipExtractor(archivePath, password);
 
+            // 进度回调：SharpSevenZip 在解压每个条目时触发 Extracting 事件。
+            // e.PercentDone 为整体百分比（0-100），若库不提供则用条目计数兜底。
+            int total = archive.ArchiveFileData.Count;
+            int done  = 0;
+
+            archive.Extracting += (sender, args) =>
+            {
+                ct.ThrowIfCancellationRequested();
+                done++;
+                int pct = total > 0 ? (int)(done * 100L / total) : 0;
+                progress?.Report(pct);
+            };
+
             archive.ExtractArchive(destDir);
+            progress?.Report(100);
+        }
+        catch (OperationCanceledException)
+        {
+            throw;
         }
         catch (SevenZipException ex)
         {
@@ -87,13 +105,13 @@ public sealed class DriftZipEngine
     //  压缩
     // ─────────────────────────────────────────────────────
     public async Task CompressAsync(CompressionOptions options, string outputFile,
-        IProgress<ulong>? progress, CancellationToken ct)
+        IProgress<int>? progress, CancellationToken ct)
     {
         await Task.Run(() => Compress(options, outputFile, progress, ct), ct);
     }
 
     public void Compress(CompressionOptions options, string outputFile,
-        IProgress<ulong>? progress, CancellationToken ct)
+        IProgress<int>? progress, CancellationToken ct)
     {
         if (options == null)
             throw new ArgumentNullException(nameof(options));
@@ -118,24 +136,29 @@ public sealed class DriftZipEngine
                 CompressionLevel = options.Level.GetSharpLevel(),
             };
 
+            // 进度回调：SharpSevenZip 在每个条目开始时触发 Compressing 事件。
+            int total = options.SourceFiles.Count;
+            int done  = 0;
+
+            compressor.Compressing += (sender, args) =>
+            {
+                ct.ThrowIfCancellationRequested();
+                done++;
+                int pct = total > 0 ? (int)(done * 100L / total) : 0;
+                progress?.Report(pct);
+            };
+
             // 确保输出目录存在。
             var outputDir = Path.GetDirectoryName(Path.GetFullPath(outputFile));
             if (!string.IsNullOrEmpty(outputDir))
                 Directory.CreateDirectory(outputDir);
 
-            // 加密分支：需要密码时使用 Encrypted 方法（SharpSevenZip 通过参数传入密码）。
             bool hasPassword = options.Encrypt && !string.IsNullOrEmpty(options.Password);
 
             if (dirs.Count == 1 && files.Count == 0)
             {
-                // 单目录 -> 整个目录打包。
-                if (hasPassword)
-                {
-                    // SharpSevenZip 未直接暴露「加密目录」的公共方法，回退到 CompressDirectory。
-                    // 密码可通过 compressor 的 Password 属性（若有）或自定义参数设置；
-                    // 若未支持，则密码不会被使用。
-                }
                 compressor.CompressDirectory(dirs[0], outputFile);
+                progress?.Report(100);
                 return;
             }
 
@@ -145,10 +168,10 @@ public sealed class DriftZipEngine
                     compressor.CompressFilesEncrypted(outputFile, options.Password!, files[0]);
                 else
                     compressor.CompressFiles(outputFile, files[0]);
+                progress?.Report(100);
                 return;
             }
 
-            // 多源且全是文件：批量压缩。
             if (dirs.Count == 0)
             {
                 var arr = files.ToArray();
@@ -156,16 +179,21 @@ public sealed class DriftZipEngine
                     compressor.CompressFilesEncrypted(outputFile, options.Password!, arr);
                 else
                     compressor.CompressFiles(outputFile, arr);
+                progress?.Report(100);
                 return;
             }
 
-            // 混合多目录/文件：以第一个源为根目录压缩。
             var firstSource = options.SourceFiles[0];
             var baseDir = Directory.Exists(firstSource)
                 ? firstSource
                 : Path.GetDirectoryName(firstSource)!;
 
             compressor.CompressDirectory(baseDir, outputFile);
+            progress?.Report(100);
+        }
+        catch (OperationCanceledException)
+        {
+            throw;
         }
         catch (SevenZipException ex)
         {

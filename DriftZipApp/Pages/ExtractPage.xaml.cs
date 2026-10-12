@@ -22,7 +22,6 @@ public sealed partial class ExtractPage : Page
     public ExtractPage()
     {
         this.InitializeComponent();
-
         Logger.Info("ExtractPage 初始化完成", "ExtractPage");
     }
 
@@ -83,10 +82,12 @@ public sealed partial class ExtractPage : Page
         StatusTextBlock.Text = "正在解压...";
         Logger.Info($"开始解压：{_archivePath} -> {_outputPath}", "ExtractPage");
 
+        ShowProgress();
         try
         {
             var engine = new DriftZipEngine();
-            await Task.Run(() => engine.Extract(_archivePath, _outputPath, password, null, CancellationToken.None));
+            var progress = new Progress<int>(pct => OperationProgress.Value = pct);
+            await Task.Run(() => engine.Extract(_archivePath, _outputPath, password, progress, CancellationToken.None));
             StatusTextBlock.Text = $"解压完成：{_outputPath}";
             Logger.Info("解压操作完成", "ExtractPage");
         }
@@ -95,6 +96,23 @@ public sealed partial class ExtractPage : Page
             StatusTextBlock.Text = $"解压失败：{ex.Message}";
             Logger.Error($"解压失败：{ex.Message}", "ExtractPage");
         }
+        finally
+        {
+            HideProgress();
+        }
+    }
+
+    private void ShowProgress()
+    {
+        OperationProgress.Visibility = Visibility.Visible;
+        OperationProgress.IsIndeterminate = false;
+        OperationProgress.Value = 0;
+    }
+
+    private void HideProgress()
+    {
+        OperationProgress.Visibility = Visibility.Collapsed;
+        OperationProgress.Value = 0;
     }
 
     private void Cancel_Click(object sender, RoutedEventArgs e)
@@ -106,5 +124,6 @@ public sealed partial class ExtractPage : Page
         ExtractToBox.Text = string.Empty;
         PasswordBox.Password = string.Empty;
         StatusTextBlock.Text = "已取消";
+        HideProgress();
     }
 }

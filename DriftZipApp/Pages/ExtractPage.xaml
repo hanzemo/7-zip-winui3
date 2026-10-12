@@ -14,6 +14,7 @@ SPDX-License-Identifier: GPL-2.0-or-later
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
+        <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
@@ -54,5 +55,6 @@ SPDX-License-Identifier: GPL-2.0-or-later
                    Text="准备解压"
                    Foreground="{ThemeResource TextFillColorPrimary}"
                    Padding="8,8,8,8"/>
+        <ProgressBar x:Name="OperationProgress" Grid.Row="3" VerticalAlignment="Bottom" Height="4" Visibility="Collapsed"/>
     </Grid>
 </Page>

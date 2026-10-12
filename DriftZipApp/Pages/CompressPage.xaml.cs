@@ -24,7 +24,6 @@ public sealed partial class CompressPage : Page
     public CompressPage()
     {
         this.InitializeComponent();
-
         Logger.Info("CompressPage 初始化完成", "CompressPage");
     }
 
@@ -37,7 +36,6 @@ public sealed partial class CompressPage : Page
         };
         picker.FileTypeFilter.Add("*");
 
-        // ✅ 绑定当前窗口
         var hwnd = WinRT.Interop.WindowNative.GetWindowHandle(App.MainWindow);
         WinRT.Interop.InitializeWithWindow.Initialize(picker, hwnd);
 
@@ -66,7 +64,6 @@ public sealed partial class CompressPage : Page
         picker.FileTypeChoices.Add("bz2", new[] { ".bz2" });
         picker.FileTypeChoices.Add("xz", new[] { ".xz" });
 
-        // ✅ 绑定当前窗口
         var hwnd = WinRT.Interop.WindowNative.GetWindowHandle(App.MainWindow);
         WinRT.Interop.InitializeWithWindow.Initialize(picker, hwnd);
 
@@ -97,10 +94,12 @@ public sealed partial class CompressPage : Page
         StatusTextBlock.Text = "正在压缩...";
         Logger.Info($"开始压缩 {_files.Count} 个文件 -> {outputPath}", "CompressPage");
 
+        ShowProgress();
         try
         {
             var engine = new DriftZipEngine();
-            await Task.Run(() => engine.Compress(options, outputPath, null, CancellationToken.None));
+            var progress = new Progress<int>(pct => OperationProgress.Value = pct);
+            await Task.Run(() => engine.Compress(options, outputPath, progress, CancellationToken.None));
             StatusTextBlock.Text = $"压缩完成：{Path.GetFileName(outputPath)}";
             Logger.Info("压缩操作完成", "CompressPage");
         }
@@ -109,6 +108,23 @@ public sealed partial class CompressPage : Page
             StatusTextBlock.Text = $"压缩失败：{ex.Message}";
             Logger.Error($"压缩失败：{ex.Message}", "CompressPage");
         }
+        finally
+        {
+            HideProgress();
+        }
+    }
+
+    private void ShowProgress()
+    {
+        OperationProgress.Visibility = Visibility.Visible;
+        OperationProgress.IsIndeterminate = false;
+        OperationProgress.Value = 0;
+    }
+
+    private void HideProgress()
+    {
+        OperationProgress.Visibility = Visibility.Collapsed;
+        OperationProgress.Value = 0;
     }
 
     private CompressionOptions BuildOptions()
@@ -143,7 +159,6 @@ public sealed partial class CompressPage : Page
 
     private static CompressionLevel ParseCompressionLevel(string? text)
     {
-        // ComboBox 项内容形如 "5 - 正常"，取第一段数字。
         if (string.IsNullOrEmpty(text))
             return CompressionLevel.Normal;
 
@@ -170,5 +185,6 @@ public sealed partial class CompressPage : Page
         _files.Clear();
         FilesText.Text = string.Empty;
         StatusTextBlock.Text = "已取消";
+        HideProgress();
     }
 }
