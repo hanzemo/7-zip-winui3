@@ -7,6 +7,7 @@ SPDX-License-Identifier: GPL-2.0-or-later
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:local="using:DriftZipApp.Services"
     mc:Ignorable="d"
     Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
 
@@ -20,25 +21,142 @@ SPDX-License-Identifier: GPL-2.0-or-later
             <AppBarButton Label="保存" Click="Save_Settings_Click"/>
         </CommandBar>
 
-        <ScrollViewer Grid.Row="1">
-            <StackPanel Padding="16">
-                <TextBlock Text="主题设置" Style="{StaticResource SubtitleTextBlockStyle}" Margin="0,0,0,12"/>
-                <StackPanel Margin="0,0,0,16">
-                    <RadioButton Content="浅色" GroupName="Theme" IsChecked="True"/>
-                    <RadioButton Content="深色" GroupName="Theme"/>
-                    <RadioButton Content="系统默认" GroupName="Theme"/>
-                </StackPanel>
+        <TabView Grid.Row="1" IsAddTabButtonVisible="False" CanDragTabs="False" CanReorderTabs="False">
+            <!-- ═══════════ System ═══════════ -->
+            <TabViewItem Header="System" IsClosable="False">
+                <ScrollViewer>
+                    <StackPanel Padding="16">
+                        <TextBlock Text="文件关联状态" Style="{StaticResource SubtitleTextBlockStyle}" Margin="0,0,0,8"/>
+                        <TextBlock Text="MSIX 应用的关联由清单声明，这里只显示当前默认程序。" Foreground="Gray" Margin="0,0,0,12"/>
 
-                <TextBlock Text="语言" Style="{StaticResource SubtitleTextBlockStyle}" Margin="0,0,0,12"/>
-                <ComboBox Margin="0,0,0,16">
-                    <ComboBoxItem Content="中文 (简体)"/>
-                    <ComboBoxItem Content="English"/>
-                </ComboBox>
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="120"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                            </Grid.RowDefinitions>
+                            <TextBlock Grid.Column="0" Text="扩展名" FontWeight="SemiBold" Padding="0,4"/>
+                            <TextBlock Grid.Column="1" Text="默认程序" FontWeight="SemiBold" Padding="0,4"/>
+                        </Grid>
 
-                <TextBlock Text="历史记录" Style="{StaticResource SubtitleTextBlockStyle}" Margin="0,0,0,12"/>
-                <ToggleSwitch Header="保存打开记录" IsOn="True" Margin="0,0,0,8"/>
-                <TextBox PlaceholderText="保存记录数量" Margin="0,0,0,16"/>
-            </StackPanel>
-        </ScrollViewer>
+                        <ListView x:Name="AssocList" SelectionMode="None" MaxHeight="500">
+                            <ListView.ItemTemplate>
+                                <DataTemplate x:DataType="local:AssocRow">
+                                    <Grid Padding="0,4">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="120"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Grid.Column="0" Text="{x:Bind Ext}"/>
+                                        <TextBlock Grid.Column="1" Text="{x:Bind DefaultApp}"/>
+                                    </Grid>
+                                </DataTemplate>
+                            </ListView.ItemTemplate>
+                        </ListView>
+                    </StackPanel>
+                </ScrollViewer>
+            </TabViewItem>
+
+            <!-- ═══════════ 7-Zip ═══════════ -->
+            <TabViewItem Header="7-Zip" IsClosable="False">
+                <ScrollViewer>
+                    <StackPanel Padding="16">
+                        <TextBlock Text="Shell 集成" Style="{StaticResource SubtitleTextBlockStyle}" Margin="0,0,0,12"/>
+                        <CheckBox x:Name="ChkShellIntegration" Content="集成到资源管理器右键菜单" Margin="0,0,0,8"/>
+                        <CheckBox x:Name="ChkCascadedMenu" Content="级联菜单（DriftZip 子菜单）" Margin="0,0,0,8"/>
+                        <CheckBox x:Name="ChkShowIcons" Content="菜单显示图标" Margin="0,0,0,8"/>
+                        <CheckBox x:Name="ChkEliminateRoot" Content="消除根文件夹重复" Margin="0,0,0,16"/>
+
+                        <TextBlock Text="右键菜单项" Style="{StaticResource SubtitleTextBlockStyle}" Margin="0,0,0,12"/>
+                        <CheckBox x:Name="ChkCtxExtract" Content="解压到… / 解压到此目录" Margin="0,0,0,8"/>
+                        <CheckBox x:Name="ChkCtxCompress" Content="压缩到… / 压缩到此目录" Margin="0,0,0,8"/>
+                    </StackPanel>
+                </ScrollViewer>
+            </TabViewItem>
+
+            <!-- ═══════════ Folders ═══════════ -->
+            <TabViewItem Header="Folders" IsClosable="False">
+                <ScrollViewer>
+                    <StackPanel Padding="16">
+                        <TextBlock Text="工作文件夹" Style="{StaticResource SubtitleTextBlockStyle}" Margin="0,0,0,8"/>
+                        <TextBlock Text="临时文件存放位置。留空则使用系统临时目录。" Foreground="Gray" Margin="0,0,0,8"/>
+
+                        <Grid Margin="0,0,0,12">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBox Grid.Column="0" x:Name="TxtWorkingFolder" PlaceholderText="（系统默认）"/>
+                            <Button Grid.Column="1" Content="浏览..." Click="BrowseWorkingFolder_Click" Margin="8,0,0,0"/>
+                        </Grid>
+
+                        <CheckBox x:Name="ChkRemovableOnly" Content="仅用于可移动驱动器" Margin="0,0,0,8"/>
+                    </StackPanel>
+                </ScrollViewer>
+            </TabViewItem>
+
+            <!-- ═══════════ Editor ═══════════ -->
+            <TabViewItem Header="Editor" IsClosable="False">
+                <ScrollViewer>
+                    <StackPanel Padding="16">
+                        <TextBlock Text="查看器" Style="{StaticResource SubtitleTextBlockStyle}" Margin="0,0,0,8"/>
+                        <Grid Margin="0,0,0,16">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBox Grid.Column="0" x:Name="TxtViewer" PlaceholderText="（未指定）"/>
+                            <Button Grid.Column="1" Content="浏览..." Click="BrowseViewer_Click" Margin="8,0,0,0"/>
+                        </Grid>
+
+                        <TextBlock Text="编辑器" Style="{StaticResource SubtitleTextBlockStyle}" Margin="0,0,0,8"/>
+                        <Grid Margin="0,0,0,16">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBox Grid.Column="0" x:Name="TxtEditor" PlaceholderText="（未指定）"/>
+                            <Button Grid.Column="1" Content="浏览..." Click="BrowseEditor_Click" Margin="8,0,0,0"/>
+                        </Grid>
+
+                        <TextBlock Text="比较工具" Style="{StaticResource SubtitleTextBlockStyle}" Margin="0,0,0,8"/>
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBox Grid.Column="0" x:Name="TxtDiff" PlaceholderText="（未指定）"/>
+                            <Button Grid.Column="1" Content="浏览..." Click="BrowseDiff_Click" Margin="8,0,0,0"/>
+                        </Grid>
+                    </StackPanel>
+                </ScrollViewer>
+            </TabViewItem>
+
+            <!-- ═══════════ Settings ═══════════ -->
+            <TabViewItem Header="Settings" IsClosable="False">
+                <ScrollViewer>
+                    <StackPanel Padding="16">
+                        <TextBlock Text="显示" Style="{StaticResource SubtitleTextBlockStyle}" Margin="0,0,0,12"/>
+                        <CheckBox x:Name="ChkShowDotDot" Content="显示 &quot;..&quot; 项" Margin="0,0,0,8"/>
+                        <CheckBox x:Name="ChkShowRealIcons" Content="显示真实文件图标" Margin="0,0,0,8"/>
+                        <CheckBox x:Name="ChkFullRowSelect" Content="整行选择" Margin="0,0,0,8"/>
+                        <CheckBox x:Name="ChkShowGridLines" Content="显示网格线" Margin="0,0,0,16"/>
+
+                        <TextBlock Text="交互" Style="{StaticResource SubtitleTextBlockStyle}" Margin="0,0,0,12"/>
+                        <CheckBox x:Name="ChkSingleClick" Content="单击打开项目" Margin="0,0,0,8"/>
+                        <CheckBox x:Name="ChkAltSelection" Content="替代选择模式" Margin="0,0,0,8"/>
+                        <CheckBox x:Name="ChkSystemMenu" Content="使用系统菜单" Margin="0,0,0,8"/>
+                        <CheckBox x:Name="ChkLargeMemory" Content="使用大内存页" Margin="0,0,0,16"/>
+
+                        <TextBlock Text="主题" Style="{StaticResource SubtitleTextBlockStyle}" Margin="0,0,0,12"/>
+                        <RadioButton x:Name="RbLight" Content="浅色" GroupName="Theme"/>
+                        <RadioButton x:Name="RbDark" Content="深色" GroupName="Theme"/>
+                        <RadioButton x:Name="RbSystem" Content="系统默认" GroupName="Theme" IsChecked="True"/>
+                    </StackPanel>
+                </ScrollViewer>
+            </TabViewItem>
+        </TabView>
     </Grid>
 </Page>
