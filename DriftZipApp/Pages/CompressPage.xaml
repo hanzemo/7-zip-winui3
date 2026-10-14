@@ -8,13 +8,16 @@ SPDX-License-Identifier: GPL-2.0-or-later
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d"
+    AllowDrop="True"
+    DragOver="CompressPage_DragOver"
+    Drop="CompressPage_Drop"
     Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
 
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
-        <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
@@ -25,16 +28,13 @@ SPDX-License-Identifier: GPL-2.0-or-later
 
         <ScrollViewer Grid.Row="1">
             <StackPanel Padding="16">
-                <TextBlock Text="选择文件" Style="{StaticResource SubtitleTextBlockStyle}" Margin="0,0,0,8"/>
+                <TextBlock Text="选择文件（可拖入）" Style="{StaticResource SubtitleTextBlockStyle}" Margin="0,0,0,8"/>
                 <Grid Margin="0,0,0,16">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*"/>
                         <ColumnDefinition Width="Auto"/>
                     </Grid.ColumnDefinitions>
-                    <TextBox Grid.Column="0"
-                             x:Name="FilesText"
-                             PlaceholderText="未选择文件"
-                             IsReadOnly="True"/>
+                    <TextBox Grid.Column="0" x:Name="FilesText" PlaceholderText="未选择文件（拖文件到窗口也可）" IsReadOnly="True"/>
                     <Button Grid.Column="1" Content="选择文件" Click="SelectFiles_Click" Margin="8,0,0,0"/>
                 </Grid>
 
@@ -44,9 +44,7 @@ SPDX-License-Identifier: GPL-2.0-or-later
                         <ColumnDefinition Width="*"/>
                         <ColumnDefinition Width="Auto"/>
                     </Grid.ColumnDefinitions>
-                    <TextBox Grid.Column="0"
-                             x:Name="OutputPath"
-                             PlaceholderText="例如：C:\backup\archive.7z"/>
+                    <TextBox Grid.Column="0" x:Name="OutputPath" PlaceholderText="例如：C:\backup\archive.7z"/>
                     <Button Grid.Column="1" Content="另存为..." Click="SelectOutput_Click" Margin="8,0,0,0"/>
                 </Grid>
 
@@ -74,9 +72,29 @@ SPDX-License-Identifier: GPL-2.0-or-later
                 <CheckBox x:Name="MultiThreadCheck" IsChecked="True" Content="多线程压缩" Margin="0,0,0,8"/>
 
                 <CheckBox x:Name="EncryptCheck" IsChecked="False" Content="加密" Margin="0,8,0,8"/>
-                <PasswordBox x:Name="PasswordBox"
-                             PlaceholderText="密码 (可选)"
-                             Margin="0,0,0,16"/>
+                <PasswordBox x:Name="PasswordBox" PlaceholderText="密码 (可选)" Margin="0,0,0,16"/>
+
+                <TextBlock Text="高级选项" Style="{StaticResource SubtitleTextBlockStyle}" Margin="0,8,0,12"/>
+
+                <CheckBox x:Name="EncryptHeadersCheck" IsChecked="False"
+                          Content="AES-256 加密头（7z 专用，需勾选上方加密）"
+                          Margin="0,0,0,8"/>
+
+                <TextBlock Text="分卷大小（MB，0 = 不分卷）" Margin="0,8,0,4"/>
+                <TextBox x:Name="VolumeSizeBox" Text="0" Margin="0,0,0,8"/>
+
+                <TextBlock Text="字典大小（KB，0 = 默认）" Margin="0,8,0,4"/>
+                <TextBox x:Name="DictSizeBox" Text="0" Margin="0,0,0,8"/>
+
+                <TextBlock Text="固实块大小（KB，0 = 默认）" Margin="0,8,0,4"/>
+                <TextBox x:Name="SolidBlockBox" Text="0" Margin="0,0,0,8"/>
+
+                <CheckBox x:Name="SfxCheck" IsChecked="False"
+                          Content="生成自解压包（SFX，仅 7z）"
+                          Margin="0,8,0,8"/>
+
+                <TextBlock Text="压缩包注释（仅 ZIP）" Margin="0,8,0,4"/>
+                <TextBox x:Name="CommentBox" PlaceholderText="（可选）" Margin="0,0,0,16"/>
             </StackPanel>
         </ScrollViewer>
 
@@ -85,6 +103,7 @@ SPDX-License-Identifier: GPL-2.0-or-later
                    Text="准备压缩"
                    Foreground="{ThemeResource TextFillColorPrimary}"
                    Padding="8,8,8,8"/>
+
         <ProgressBar x:Name="OperationProgress" Grid.Row="3" VerticalAlignment="Bottom" Height="4" Visibility="Collapsed"/>
     </Grid>
 </Page>

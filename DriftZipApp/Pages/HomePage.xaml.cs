@@ -24,15 +24,12 @@ public sealed partial class HomePage : Page
 {
     public HomeViewModel ViewModel { get; } = new();
 
-    // 右键点击的项（解决"不用先选中"）
     private ArchiveItem? _rightClickedItem;
-
 
     public HomePage()
     {
         this.InitializeComponent();
         this.DataContext = ViewModel;
-
         this.Loaded += (s, e) => ViewModel.Refresh();
     }
 
@@ -45,19 +42,14 @@ public sealed partial class HomePage : Page
 
     private void ArchiveGridView_DoubleTapped(object sender, DoubleTappedRoutedEventArgs e)
     {
-        // 双击也用右键记录的项（若存在），否则用 SelectedItem
         var item = _rightClickedItem ?? ArchiveGridView.SelectedItem as ArchiveItem;
         if (item == null) return;
         if (string.IsNullOrEmpty(item.Path)) return;
         OpenItem(item);
     }
 
-    // ─────────────────────────────────────────────────────
-    //  右键：记录被点的项 + 动态构建菜单
-    // ─────────────────────────────────────────────────────
     private void ArchiveGridView_RightTapped(object sender, RightTappedRoutedEventArgs e)
     {
-        // 从被点的原始元素往上找 GridViewItem，取出 DataContext
         if (e.OriginalSource is FrameworkElement fe)
         {
             var container = FindParent<GridViewItem>(fe);
@@ -86,12 +78,6 @@ public sealed partial class HomePage : Page
         return null;
     }
 
-    /// <summary>
-    /// 根据当前浏览模式动态构建右键菜单。
-    /// A. 磁盘页（此电脑根）：只有视图
-    /// B. 文件资源管理器页（ThisPC + 有路径）：打开/新建/重命名/删除/复制/剪切/粘贴/压缩/解压/视图
-    /// C. 压缩包扫描页：删除/重命名/压缩/解压/视图（无新建）
-    /// </summary>
     private MenuFlyout BuildContextMenu()
     {
         var menu = new MenuFlyout();
@@ -100,7 +86,6 @@ public sealed partial class HomePage : Page
                           && string.IsNullOrEmpty(ViewModel.CurrentPath);
         bool isExplorer = ViewModel.BrowseMode == BrowseMode.ThisPC
                           && !string.IsNullOrEmpty(ViewModel.CurrentPath);
-        bool isScan     = ViewModel.BrowseMode == BrowseMode.ScanArchives;
 
         // ── A. 磁盘页：只有视图 ──
         if (isDiskRoot)
@@ -109,7 +94,7 @@ public sealed partial class HomePage : Page
             return menu;
         }
 
-        // ── B/C 公共项：打开（仅资源管理器） ──
+        // ── 打开（仅资源管理器） ──
         if (isExplorer)
         {
             var open = new MenuFlyoutItem { Text = "打开" };
@@ -152,7 +137,7 @@ public sealed partial class HomePage : Page
 
         menu.Items.Add(new MenuFlyoutSeparator());
 
-        // ── 压缩/解压（B/C 都有，但仅对压缩包文件） ──
+        // ── 压缩/解压（对压缩包文件） ──
         var item = _rightClickedItem;
         bool targetIsArchive = item != null
             && !item.IsDirectory
@@ -168,6 +153,10 @@ public sealed partial class HomePage : Page
             var extractHere = new MenuFlyoutItem { Text = "解压到此目录" };
             extractHere.Click += ExtractHere_Click;
             menu.Items.Add(extractHere);
+
+            var testArchive = new MenuFlyoutItem { Text = "测试压缩包" };
+            testArchive.Click += TestArchive_Click;
+            menu.Items.Add(testArchive);
 
             menu.Items.Add(new MenuFlyoutSeparator());
         }
@@ -185,9 +174,7 @@ public sealed partial class HomePage : Page
             menu.Items.Add(new MenuFlyoutSeparator());
         }
 
-        // ── 视图 ──
         AddViewMenu(menu);
-
         return menu;
     }
 
@@ -216,15 +203,10 @@ public sealed partial class HomePage : Page
         return ext is ".7z" or ".zip" or ".rar" or ".tar" or ".gz" or ".bz2" or ".xz";
     }
 
-    /// <summary>
-    /// 取当前操作目标：优先用右键记录的项，否则用选中项。
-    /// </summary>
     private List<ArchiveItem> GetTargetItems()
     {
-        // 右键项优先
         if (_rightClickedItem != null)
         {
-            // 如果右键项也在选中集合里，则用整个选中集合（支持多选右键）
             var selected = ArchiveGridView.SelectedItems.OfType<ArchiveItem>().ToList();
             if (selected.Contains(_rightClickedItem) && selected.Count > 1)
                 return selected;
@@ -261,9 +243,6 @@ public sealed partial class HomePage : Page
         }
     }
 
-    // ─────────────────────────────────────────────────────
-    //  进度条辅助
-    // ─────────────────────────────────────────────────────
     private void ShowProgress(string status)
     {
         OperationProgress.Visibility = Visibility.Visible;
@@ -280,62 +259,25 @@ public sealed partial class HomePage : Page
 
     private IProgress<int> MakeProgress()
     {
-        return new Progress<int>(pct =>
-        {
-            OperationProgress.Value = pct;
-        });
+        return new Progress<int>(pct => OperationProgress.Value = pct);
     }
 
-    // ─────────────────────────────────────────────────────
-    //  工具栏按钮
-    // ─────────────────────────────────────────────────────
-    private void Back_Click(object sender, RoutedEventArgs e)
-    {
-        ViewModel.GoBack();
-        UpdateToolbar();
-    }
-
-    private void Forward_Click(object sender, RoutedEventArgs e)
-    {
-        ViewModel.GoForward();
-        UpdateToolbar();
-    }
-
-    private void Up_Click(object sender, RoutedEventArgs e)
-    {
-        ViewModel.GoUp();
-        UpdateToolbar();
-    }
-
-    private void Refresh_Click(object sender, RoutedEventArgs e)
-    {
-        ViewModel.Refresh();
-        UpdateToolbar();
-    }
+    private void Back_Click(object sender, RoutedEventArgs e) { ViewModel.GoBack(); UpdateToolbar(); }
+    private void Forward_Click(object sender, RoutedEventArgs e) { ViewModel.GoForward(); UpdateToolbar(); }
+    private void Up_Click(object sender, RoutedEventArgs e) { ViewModel.GoUp(); UpdateToolbar(); }
+    private void Refresh_Click(object sender, RoutedEventArgs e) { ViewModel.Refresh(); UpdateToolbar(); }
 
     private void PathBox_QuerySubmitted(AutoSuggestBox sender, AutoSuggestBoxQuerySubmittedEventArgs args)
     {
         var q = args.QueryText?.Trim();
         if (string.IsNullOrEmpty(q)) return;
 
-        if (Directory.Exists(q))
-        {
-            ViewModel.NavigateTo(q);
-        }
-        else if (File.Exists(q))
-        {
-            this.Frame.Navigate(typeof(ArchivePreviewPage), q);
-        }
-        else
-        {
-            ViewModel.Search(q);
-        }
+        if (Directory.Exists(q)) ViewModel.NavigateTo(q);
+        else if (File.Exists(q)) this.Frame.Navigate(typeof(ArchivePreviewPage), q);
+        else ViewModel.Search(q);
         UpdateToolbar();
     }
 
-    // ─────────────────────────────────────────────────────
-    //  右键菜单动作
-    // ─────────────────────────────────────────────────────
     private async void ExtractTo_Click(object sender, RoutedEventArgs e)
     {
         var items = GetTargetItems();
@@ -362,15 +304,8 @@ public sealed partial class HomePage : Page
             }
             ViewModel.StatusMessage = $"解压完成：{ok} 项";
         }
-        catch (Exception ex)
-        {
-            ViewModel.StatusMessage = $"解压失败: {ex.Message}";
-        }
-        finally
-        {
-            HideProgress();
-            ViewModel.Refresh();
-        }
+        catch (Exception ex) { ViewModel.StatusMessage = $"解压失败: {ex.Message}"; }
+        finally { HideProgress(); ViewModel.Refresh(); }
     }
 
     private async void CompressTo_Click(object sender, RoutedEventArgs e)
@@ -401,15 +336,8 @@ public sealed partial class HomePage : Page
             await Task.Run(() => engine.Compress(options, file.Path, MakeProgress(), CancellationToken.None));
             ViewModel.StatusMessage = $"压缩完成：{file.Path}";
         }
-        catch (Exception ex)
-        {
-            ViewModel.StatusMessage = $"压缩失败: {ex.Message}";
-        }
-        finally
-        {
-            HideProgress();
-            ViewModel.Refresh();
-        }
+        catch (Exception ex) { ViewModel.StatusMessage = $"压缩失败: {ex.Message}"; }
+        finally { HideProgress(); ViewModel.Refresh(); }
     }
 
     private async void ExtractHere_Click(object sender, RoutedEventArgs e)
@@ -429,15 +357,8 @@ public sealed partial class HomePage : Page
             }
             ViewModel.StatusMessage = "已解压到当前目录";
         }
-        catch (Exception ex)
-        {
-            ViewModel.StatusMessage = $"解压失败: {ex.Message}";
-        }
-        finally
-        {
-            HideProgress();
-            ViewModel.Refresh();
-        }
+        catch (Exception ex) { ViewModel.StatusMessage = $"解压失败: {ex.Message}"; }
+        finally { HideProgress(); ViewModel.Refresh(); }
     }
 
     private async void CompressHere_Click(object sender, RoutedEventArgs e)
@@ -465,27 +386,39 @@ public sealed partial class HomePage : Page
             await Task.Run(() => engine.Compress(options, output, MakeProgress(), CancellationToken.None));
             ViewModel.StatusMessage = $"压缩完成：{output}";
         }
-        catch (Exception ex)
+        catch (Exception ex) { ViewModel.StatusMessage = $"压缩失败: {ex.Message}"; }
+        finally { HideProgress(); ViewModel.Refresh(); }
+    }
+
+    private async void TestArchive_Click(object sender, RoutedEventArgs e)
+    {
+        var items = GetTargetItems();
+        if (items.Count == 0) return;
+
+        ShowProgress("正在测试...");
+        OperationProgress.IsIndeterminate = true;
+        try
         {
-            ViewModel.StatusMessage = $"压缩失败: {ex.Message}";
+            var engine = new DriftZipEngine();
+            int ok = 0, fail = 0;
+            foreach (var item in items)
+            {
+                if (string.IsNullOrEmpty(item.Path) || item.IsDirectory) continue;
+                bool passed = await engine.TestArchiveAsync(item.Path, null);
+                if (passed) ok++; else fail++;
+            }
+            ViewModel.StatusMessage = $"测试完成：{ok} 通过，{fail} 失败";
         }
-        finally
-        {
-            HideProgress();
-            ViewModel.Refresh();
-        }
+        catch (Exception ex) { ViewModel.StatusMessage = $"测试失败：{ex.Message}"; }
+        finally { OperationProgress.IsIndeterminate = false; HideProgress(); }
     }
 
     private void Open_Click(object sender, RoutedEventArgs e)
     {
         var items = GetTargetItems();
-        if (items.Count > 0)
-            OpenItem(items[0]);
+        if (items.Count > 0) OpenItem(items[0]);
     }
 
-    // ─────────────────────────────────────────────────────
-    //  新建 / 重命名 / 删除
-    // ─────────────────────────────────────────────────────
     private void NewFolder_Click(object sender, RoutedEventArgs e)
     {
         if (ViewModel.BrowseMode != BrowseMode.ThisPC) return;
@@ -506,10 +439,7 @@ public sealed partial class HomePage : Page
             ViewModel.StatusMessage = "已创建文件夹";
             ViewModel.Refresh();
         }
-        catch (Exception ex)
-        {
-            ViewModel.StatusMessage = $"新建失败：{ex.Message}";
-        }
+        catch (Exception ex) { ViewModel.StatusMessage = $"新建失败：{ex.Message}"; }
     }
 
     private async void Rename_Click(object sender, RoutedEventArgs e)
@@ -522,14 +452,11 @@ public sealed partial class HomePage : Page
         var box = new TextBox { Text = item.Name };
         var dialog = new ContentDialog
         {
-            Title = "重命名",
-            Content = box,
-            PrimaryButtonText = "确定",
-            CloseButtonText = "取消",
+            Title = "重命名", Content = box,
+            PrimaryButtonText = "确定", CloseButtonText = "取消",
             XamlRoot = this.XamlRoot,
         };
-        var result = await dialog.ShowAsync();
-        if (result != ContentDialogResult.Primary) return;
+        if (await dialog.ShowAsync() != ContentDialogResult.Primary) return;
 
         var newName = box.Text?.Trim();
         if (string.IsNullOrEmpty(newName) || newName == item.Name) return;
@@ -543,10 +470,7 @@ public sealed partial class HomePage : Page
             ViewModel.StatusMessage = "重命名完成";
             ViewModel.Refresh();
         }
-        catch (Exception ex)
-        {
-            ViewModel.StatusMessage = $"重命名失败：{ex.Message}";
-        }
+        catch (Exception ex) { ViewModel.StatusMessage = $"重命名失败：{ex.Message}"; }
     }
 
     private async void Delete_Click(object sender, RoutedEventArgs e)
@@ -556,14 +480,11 @@ public sealed partial class HomePage : Page
 
         var dialog = new ContentDialog
         {
-            Title = "删除",
-            Content = $"确认删除 {items.Count} 项？",
-            PrimaryButtonText = "删除",
-            CloseButtonText = "取消",
+            Title = "删除", Content = $"确认删除 {items.Count} 项？",
+            PrimaryButtonText = "删除", CloseButtonText = "取消",
             XamlRoot = this.XamlRoot,
         };
-        var result = await dialog.ShowAsync();
-        if (result != ContentDialogResult.Primary) return;
+        if (await dialog.ShowAsync() != ContentDialogResult.Primary) return;
 
         try
         {
@@ -576,31 +497,19 @@ public sealed partial class HomePage : Page
             ViewModel.StatusMessage = $"已删除 {items.Count} 项";
             ViewModel.Refresh();
         }
-        catch (Exception ex)
-        {
-            ViewModel.StatusMessage = $"删除失败：{ex.Message}";
-        }
+        catch (Exception ex) { ViewModel.StatusMessage = $"删除失败：{ex.Message}"; }
     }
 
-    // ─────────────────────────────────────────────────────
-    //  复制 / 剪切 / 粘贴
-    // ─────────────────────────────────────────────────────
     private void Copy_Click(object sender, RoutedEventArgs e)
     {
-        var paths = GetTargetItems()
-            .Where(x => !string.IsNullOrEmpty(x.Path))
-            .Select(x => x.Path!)
-            .ToList();
+        var paths = GetTargetItems().Where(x => !string.IsNullOrEmpty(x.Path)).Select(x => x.Path!).ToList();
         ViewModel.SetClipboard(paths, cut: false);
         ViewModel.StatusMessage = $"已复制 {paths.Count} 项";
     }
 
     private void Cut_Click(object sender, RoutedEventArgs e)
     {
-        var paths = GetTargetItems()
-            .Where(x => !string.IsNullOrEmpty(x.Path))
-            .Select(x => x.Path!)
-            .ToList();
+        var paths = GetTargetItems().Where(x => !string.IsNullOrEmpty(x.Path)).Select(x => x.Path!).ToList();
         ViewModel.SetClipboard(paths, cut: true);
         ViewModel.StatusMessage = $"已剪切 {paths.Count} 项";
     }
@@ -643,10 +552,7 @@ public sealed partial class HomePage : Page
             PathBox.Text = string.IsNullOrEmpty(ViewModel.CurrentPath) ? "此电脑" : ViewModel.CurrentPath;
             BuildBreadcrumb();
         }
-        else
-        {
-            PathBox.Text = "";
-        }
+        else { PathBox.Text = ""; }
     }
 
     private void BuildBreadcrumb()
@@ -672,8 +578,73 @@ public sealed partial class HomePage : Page
             BreadcrumbPanel.Children.Add(btn);
         }
     }
+
+    private void HomePage_DragOver(object sender, DragEventArgs e)
+    {
+        if (e.DataView.Contains(StandardDataFormats.StorageItems))
+        {
+            e.AcceptedOperation = DataPackageOperation.Copy;
+            e.DragUIOverride.Caption = "拖到此处压缩或添加";
+        }
+    }
+
+    private async void HomePage_Drop(object sender, DragEventArgs e)
+    {
+        if (!e.DataView.Contains(StandardDataFormats.StorageItems)) return;
+
+        var items = await e.DataView.GetStorageItemsAsync();
+        var paths = items.Select(i => i.Path).Where(p => !string.IsNullOrEmpty(p)).ToList();
+        if (paths.Count == 0) return;
+
+        var target = _rightClickedItem;
+        if (target != null && !target.IsDirectory && !string.IsNullOrEmpty(target.Path) && IsArchiveFile(target.Path))
+        {
+            var dlg = new ContentDialog
+            {
+                Title = "添加到压缩包",
+                Content = $"将 {paths.Count} 个文件添加到 {target.Name}？",
+                PrimaryButtonText = "添加", CloseButtonText = "取消",
+                XamlRoot = this.XamlRoot,
+            };
+            if (await dlg.ShowAsync() != ContentDialogResult.Primary) return;
+
+            try
+            {
+                var engine = new DriftZipEngine();
+                await engine.UpdateArchiveAsync(target.Path!, paths, null);
+                ViewModel.StatusMessage = "已添加";
+                ViewModel.Refresh();
+            }
+            catch (Exception ex) { ViewModel.StatusMessage = $"添加失败：{ex.Message}"; }
+            return;
+        }
+
+        if (string.IsNullOrEmpty(ViewModel.CurrentPath)) return;
+        var output = Path.Combine(ViewModel.CurrentPath, "archive.7z");
+        int i = 1;
+        while (File.Exists(output))
+            output = Path.Combine(ViewModel.CurrentPath, $"archive ({i++}).7z");
+
+        ShowProgress("正在压缩...");
+        try
+        {
+            var engine = new DriftZipEngine();
+            await Task.Run(() => engine.Compress(new CompressionOptions
+            {
+                Format = OutputFormat.SevenZip,
+                Level = CompressionLevel.Normal,
+                SourceFiles = paths,
+            }, output, MakeProgress(), CancellationToken.None));
+            ViewModel.StatusMessage = $"已压缩：{output}";
+        }
+        catch (Exception ex) { ViewModel.StatusMessage = $"压缩失败：{ex.Message}"; }
+        finally { HideProgress(); ViewModel.Refresh(); }
+    }
 }
 
+// ═════════════════════════════════════════════════════════
+//  HomeViewModel（和原来一样，没改）
+// ═════════════════════════════════════════════════════════
 public partial class HomeViewModel : ObservableObject
 {
     [ObservableProperty] private ObservableCollection<ArchiveItem> archiveItems = new();
@@ -717,22 +688,13 @@ public partial class HomeViewModel : ObservableObject
 
     public void NavigateTo(string path)
     {
-        if (!string.IsNullOrEmpty(CurrentPath))
-            _history.Push(CurrentPath);
+        if (!string.IsNullOrEmpty(CurrentPath)) _history.Push(CurrentPath);
         _forward.Clear();
         CanGoBack = _history.Count > 0;
         CanGoForward = false;
 
-        if (string.IsNullOrEmpty(path))
-        {
-            CurrentPath = "";
-            LoadDrives();
-        }
-        else if (Directory.Exists(path))
-        {
-            CurrentPath = path;
-            LoadDirectory(path);
-        }
+        if (string.IsNullOrEmpty(path)) { CurrentPath = ""; LoadDrives(); }
+        else if (Directory.Exists(path)) { CurrentPath = path; LoadDirectory(path); }
     }
 
     public void GoBack()
@@ -763,12 +725,7 @@ public partial class HomeViewModel : ObservableObject
 
     public void GoUp()
     {
-        if (string.IsNullOrEmpty(CurrentPath))
-        {
-            NavigateTo("");
-            return;
-        }
-
+        if (string.IsNullOrEmpty(CurrentPath)) { NavigateTo(""); return; }
         var parent = Directory.GetParent(CurrentPath)?.FullName;
         NavigateTo(parent ?? "");
     }
@@ -789,9 +746,7 @@ public partial class HomeViewModel : ObservableObject
                     var isDir = Directory.Exists(entry);
                     ArchiveItems.Add(new ArchiveItem
                     {
-                        Name = name,
-                        Path = entry,
-                        IsDirectory = isDir,
+                        Name = name, Path = entry, IsDirectory = isDir,
                         Size = isDir ? 0 : (uint)new FileInfo(entry).Length,
                         Modified = isDir ? new DirectoryInfo(entry).LastWriteTime : new FileInfo(entry).LastWriteTime,
                     });
@@ -803,21 +758,13 @@ public partial class HomeViewModel : ObservableObject
         catch (Exception ex) { StatusMessage = $"搜索失败：{ex.Message}"; }
     }
 
-    public void SetClipboard(List<string> paths, bool cut)
-    {
-        _clipboard = paths;
-        _clipboardCut = cut;
-    }
+    public void SetClipboard(List<string> paths, bool cut) { _clipboard = paths; _clipboardCut = cut; }
 
     public void Paste()
     {
-        if (_clipboard.Count == 0) return;
+         if (_clipboard.Count == 0) return;
         var dest = CurrentPath;
-        if (string.IsNullOrEmpty(dest) || !Directory.Exists(dest))
-        {
-            StatusMessage = "无法粘贴到此位置";
-            return;
-        }
+        if (string.IsNullOrEmpty(dest) || !Directory.Exists(dest)) { StatusMessage = "无法粘贴到此位置"; return; }
 
         try
         {
@@ -883,11 +830,7 @@ public partial class HomeViewModel : ObservableObject
                 try
                 {
                     var info = new DirectoryInfo(dir);
-                    ArchiveItems.Add(new ArchiveItem
-                    {
-                        Name = info.Name, Path = dir, IsDirectory = true,
-                        Modified = info.LastWriteTime,
-                    });
+                    ArchiveItems.Add(new ArchiveItem { Name = info.Name, Path = dir, IsDirectory = true, Modified = info.LastWriteTime });
                 }
                 catch { }
             }
