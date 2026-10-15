@@ -71,9 +71,9 @@ public sealed partial class ArchivePreviewPage : Page
                 foreach (var scEntry in scArchive.Entries)
                 {
                     if (scEntry.IsDirectory) continue;
-                    if (scEntry.CompressedSize() <= 0) continue;
+                    if (scEntry.CompressedSize <= 0) continue;
                     var key = scEntry.Key?.Replace('\\', '/').TrimStart('/') ?? "";
-                    if (!string.IsNullOrEmpty(key)) scMap[key] = scEntry.CompressedSize();
+                    if (!string.IsNullOrEmpty(key)) scMap[key] = scEntry.CompressedSize;
                 }
                 foreach (var e in _allEntries)
                     if (scMap.TryGetValue(e.FullPath, out long cs))
