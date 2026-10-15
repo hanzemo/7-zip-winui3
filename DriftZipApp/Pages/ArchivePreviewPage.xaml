@@ -26,6 +26,8 @@
             <Button Content="测试压缩包" Click="TestArchive_Click"/>
             <Button Content="查看属性" Click="ShowProperties_Click"/>
             <Button Content="添加文件..." Click="AddFiles_Click"/>
+            <TextBlock x:Name="OverallRatioText" VerticalAlignment="Center"
+                       Foreground="Gray" Text="" Margin="12,0,0,0"/>
         </StackPanel>
 
         <AutoSuggestBox x:Name="SearchBox" Grid.Row="1"

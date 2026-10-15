@@ -5,6 +5,7 @@ using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Input;
 using Microsoft.UI.Xaml.Navigation;
 using SharpSevenZip;
+using SharpCompress.Archives;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -65,14 +66,14 @@ public sealed partial class ArchivePreviewPage : Page
             // ── SharpCompress 补压缩率 ──
             try
             {
-                using var scArchive = SharpCompress.Archives.ArchiveFactory.Open(path);
+                using var scArchive = ArchiveFactory.OpenArchive(path);
                 var scMap = new System.Collections.Generic.Dictionary<string, long>(System.StringComparer.OrdinalIgnoreCase);
                 foreach (var scEntry in scArchive.Entries)
                 {
                     if (scEntry.IsDirectory) continue;
-                    if (scEntry.CompressedSize <= 0) continue;
+                    if (scEntry.CompressedSize() <= 0) continue;
                     var key = scEntry.Key?.Replace('\\', '/').TrimStart('/') ?? "";
-                    if (!string.IsNullOrEmpty(key)) scMap[key] = scEntry.CompressedSize;
+                    if (!string.IsNullOrEmpty(key)) scMap[key] = scEntry.CompressedSize();
                 }
                 foreach (var e in _allEntries)
                     if (scMap.TryGetValue(e.FullPath, out long cs))
@@ -85,6 +86,26 @@ public sealed partial class ArchivePreviewPage : Page
 
             _currentPath = "";
             RefreshView();
+
+            // ── 整体压缩率（物理大小 vs 解压后总大小） ──
+            try
+            {
+                long uncompressedTotal = _allEntries.Where(e => !e.IsDirectory).Sum(e => (long)e.Size);
+                long physicalSize = new FileInfo(path).Length;
+                if (uncompressedTotal > 0 && physicalSize > 0)
+                {
+                    double overall = 100.0 - (physicalSize * 100.0 / uncompressedTotal);
+                    OverallRatioText.Text = $"整体压缩率：{overall:F1}%（{physicalSize / 1024.0 / 1024.0:F2} MB → {uncompressedTotal / 1024.0 / 1024.0:F2} MB）";
+                }
+                else
+                {
+                    OverallRatioText.Text = "";
+                }
+            }
+            catch
+            {
+                OverallRatioText.Text = "";
+            }
         }
         catch (Exception ex)
         {
