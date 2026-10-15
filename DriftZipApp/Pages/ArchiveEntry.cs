@@ -43,5 +43,9 @@ public class ArchiveEntry
         ? ""
         : Modified.ToString("yyyy-MM-dd HH:mm");
 
+    public long SharpCompressedSize { get; set; }
+    public string SharpRatioText => SharpCompressedSize > 0 && Size > 0
+        ? $"{100.0 - (SharpCompressedSize * 100.0 / Size):F0}%"
+        : "";
     public string IconGlyph => IsDirectory ? "\uE8B7" : "\uE8A5";
 }

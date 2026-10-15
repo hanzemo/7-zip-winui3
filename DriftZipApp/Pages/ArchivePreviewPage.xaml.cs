@@ -54,13 +54,34 @@ public sealed partial class ArchivePreviewPage : Page
                     FullPath = f.FileName.Replace('\\', '/').TrimStart('/'),
                     Name = Path.GetFileName(f.FileName.TrimEnd('/', '\\')),
                     Size = f.Size,
-                    CompressedSize = f.CompressedSize,
+                    CompressedSize = 0,
                     Crc = f.Crc,
                     Modified = f.LastWriteTime,
                     IsDirectory = f.IsDirectory || f.FileName.EndsWith("/") || f.FileName.EndsWith("\\"),
                 })
                 .Where(x => !string.IsNullOrEmpty(x.FullPath))
                 .ToList();
+
+            // ── SharpCompress 补压缩率 ──
+            try
+            {
+                using var scArchive = SharpCompress.Archives.ArchiveFactory.Open(path);
+                var scMap = new System.Collections.Generic.Dictionary<string, long>(System.StringComparer.OrdinalIgnoreCase);
+                foreach (var scEntry in scArchive.Entries)
+                {
+                    if (scEntry.IsDirectory) continue;
+                    if (scEntry.CompressedSize <= 0) continue;
+                    var key = scEntry.Key?.Replace('\\', '/').TrimStart('/') ?? "";
+                    if (!string.IsNullOrEmpty(key)) scMap[key] = scEntry.CompressedSize;
+                }
+                foreach (var e in _allEntries)
+                    if (scMap.TryGetValue(e.FullPath, out long cs))
+                        e.SharpCompressedSize = cs;
+            }
+            catch (Exception scEx)
+            {
+                Logger.Warn($"SharpCompress 读压缩率失败：{scEx.Message}", "ArchivePreviewPage");
+            }
 
             _currentPath = "";
             RefreshView();

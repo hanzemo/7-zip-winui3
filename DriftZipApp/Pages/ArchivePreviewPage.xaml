@@ -97,7 +97,7 @@
                         </StackPanel>
                         <TextBlock Grid.Column="1" Text="{x:Bind SizeText}"/>
                         <TextBlock Grid.Column="2" Text="{x:Bind CompressedSizeText}"/>
-                        <TextBlock Grid.Column="3" Text="{x:Bind RatioText}"/>
+                        <TextBlock Grid.Column="3" Text="{x:Bind SharpRatioText}"/>
                         <TextBlock Grid.Column="4" Text="{x:Bind CrcText}"/>
                         <TextBlock Grid.Column="5" Text="{x:Bind ModifiedText}"/>
                     </Grid>

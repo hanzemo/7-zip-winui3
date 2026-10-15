@@ -51,7 +51,6 @@ public sealed class DriftZipEngine
                 {
                     // ArchiveFileInfo 的 CRC / 压缩后大小
                     try { item.Crc = entry.Crc; } catch { }
-                    try { item.CompressedSize = entry.CompressedSize; } catch { }
                 }
 
                 entries.Add(item);
