@@ -183,6 +183,14 @@ public sealed partial class CompressPage : Page
         FilesList.ItemsSource = _files.ToList();
         Logger.Info("清空文件列表", "CompressPage");
     }
+
+    private void ClearFiles_Click(object sender, RoutedEventArgs e)
+    {
+        _files.Clear();
+        FilesList.ItemsSource = null;
+        FilesList.ItemsSource = _files.ToList();
+        Logger.Info("清空文件列表", "CompressPage");
+    }
     }
 
     private void RemoveFile_Click(object sender, RoutedEventArgs e)
