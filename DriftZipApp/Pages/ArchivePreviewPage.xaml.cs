@@ -479,12 +479,30 @@ public sealed partial class ArchivePreviewPage : Page
     // ─────────────────────────────────────────────
     private async void EntryList_DragItemsStarting(object sender, DragItemsStartingEventArgs e)
     {
-        Logger.Info($"拖出开始：_archivePath={_archivePath ?? "null"}, items={e.Items.Count}", "ArchivePreviewPage");
-
         if (_archivePath == null) return;
-        Logger.Info($"拖出：e.Items.Count={e.Items.Count}, 类型={e.Items.FirstOrDefault()?.GetType().FullName ?? "null"}", "ArchivePreviewPage");
-        var entries = EntryList.SelectedItems.OfType<ArchiveEntry>().Where(x => !x.IsDirectory).ToList();
-        if (entries.Count == 0) { e.Cancel = true; return; }
+
+        var dragged = e.Items.OfType<ArchiveEntry>().ToList();
+        if (dragged.Count == 0) { e.Cancel = true; return; }
+
+        // 展开文件夹：文件夹 → 里面所有文件（平铺）
+        var filesToExtract = new List<ArchiveEntry>();
+        foreach (var item in dragged)
+        {
+            if (item.IsDirectory)
+            {
+                var prefix = item.FullPath.TrimEnd('/') + "/";
+                var children = _allEntries
+                    .Where(x => !x.IsDirectory && x.FullPath.StartsWith(prefix, StringComparison.OrdinalIgnoreCase))
+                    .ToList();
+                filesToExtract.AddRange(children);
+            }
+            else
+            {
+                filesToExtract.Add(item);
+            }
+        }
+
+        if (filesToExtract.Count == 0) { e.Cancel = true; return; }
 
         var tempDir = Path.Combine(Path.GetTempPath(), "DriftZipApp_Drag", Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(tempDir);
@@ -493,22 +511,22 @@ public sealed partial class ArchivePreviewPage : Page
         try
         {
             using var extractor = new SharpSevenZipExtractor(_archivePath);
-            foreach (var entry in entries)
+            foreach (var entry in filesToExtract)
             {
                 try
                 {
                     var outPath = Path.Combine(tempDir, Path.GetFileName(entry.Name));
-                    Logger.Info($"拖出：开始 ExtractFile {entry.RawName}", "ArchivePreviewPage");
+                    int i = 1;
+                    while (File.Exists(outPath))
+                        outPath = Path.Combine(tempDir, $"{Path.GetFileNameWithoutExtension(entry.Name)} ({i++}){Path.GetExtension(entry.Name)}");
+
                     using (var fs = File.Create(outPath)) extractor.ExtractFile(entry.RawName, fs);
                     if (File.Exists(outPath)) files.Add(await StorageFile.GetFileFromPathAsync(outPath));
-                    Logger.Info($"拖出：ExtractFile 完成", "ArchivePreviewPage");
                 }
                 catch (Exception ex) { Logger.Warn($"拖出单项失败：{ex.Message}", "ArchivePreviewPage"); }
             }
         }
         catch (Exception ex) { Logger.Warn($"拖出解压失败：{ex.Message}", "ArchivePreviewPage"); }
-
-        Logger.Info($"拖出：entries={entries.Count}, files={files.Count}", "ArchivePreviewPage");
 
         if (files.Count > 0)
         {

@@ -272,11 +272,30 @@ public sealed class DriftZipEngine
             }
             else
             {
-                var firstSource = options.SourceFiles[0];
-                var baseDir = Directory.Exists(firstSource)
-                    ? firstSource
-                    : Path.GetDirectoryName(firstSource)!;
-                compressor.CompressDirectory(baseDir, realOutput);
+                // 多目录/混合：先复制到临时根目录，再压缩
+                var tempRoot = Path.Combine(Path.GetTempPath(), "DriftZipApp_Compress", Guid.NewGuid().ToString("N"));
+                Directory.CreateDirectory(tempRoot);
+
+                try
+                {
+                    foreach (var dir in dirs)
+                    {
+                        var dirName = Path.GetFileName(dir.TrimEnd('\\', '/'));
+                        var dest = Path.Combine(tempRoot, dirName);
+                        CopyDirectoryRecursive(dir, dest);
+                    }
+                    foreach (var f in files)
+                    {
+                        var dest = Path.Combine(tempRoot, Path.GetFileName(f));
+                        File.Copy(f, dest, true);
+                    }
+
+                    compressor.CompressDirectory(tempRoot, realOutput);
+                }
+                finally
+                {
+                    try { Directory.Delete(tempRoot, true); } catch { }
+                }
             }
 
             // ZIP 注释（仅 ZIP）
@@ -508,6 +527,15 @@ public sealed class DriftZipEngine
 
     private static bool IsZip(string path)
         => path.EndsWith(".zip", StringComparison.OrdinalIgnoreCase);
+
+    private static void CopyDirectoryRecursive(string src, string dest)
+    {
+        Directory.CreateDirectory(dest);
+        foreach (var file in Directory.GetFiles(src))
+            File.Copy(file, Path.Combine(dest, Path.GetFileName(file)), true);
+        foreach (var dir in Directory.GetDirectories(src))
+            CopyDirectoryRecursive(dir, Path.Combine(dest, Path.GetFileName(dir)));
+    }
 }
 
 // ═════════════════════════════════════════════════════════
