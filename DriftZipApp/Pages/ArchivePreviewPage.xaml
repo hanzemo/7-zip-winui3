@@ -71,14 +71,14 @@
                     Background="Transparent" BorderThickness="0"/>
         </Grid>
 
-        <GridView x:Name="EntryList"
+        <ListView x:Name="EntryList"
                   Grid.Row="3"
                   IsItemClickEnabled="True"
                   CanDragItems="True"
                   DragItemsStarting="EntryList_DragItemsStarting"
                   DoubleTapped="EntryList_DoubleTapped"
                   SelectionMode="Extended">
-            <GridView.ContextFlyout>
+            <ListView.ContextFlyout>
                 <MenuFlyout>
                     <MenuFlyoutItem Text="解压到…" Click="ExtractEntryTo_Click"/>
                     <MenuFlyoutItem Text="解压到此目录" Click="ExtractEntryHere_Click"/>
@@ -88,13 +88,8 @@
                     <MenuFlyoutSeparator/>
                     <MenuFlyoutItem Text="复制路径" Click="CopyEntryPath_Click"/>
                 </MenuFlyout>
-            </GridView.ContextFlyout>
-            <GridView.ItemsPanel>
-                <ItemsPanelTemplate>
-                    <ItemsWrapGrid Orientation="Horizontal" MaximumRowsOrColumns="1"/>
-                </ItemsPanelTemplate>
-            </GridView.ItemsPanel>
-            <GridView.ItemTemplate>
+            </ListView.ContextFlyout>
+            <ListView.ItemTemplate>
                 <DataTemplate x:DataType="local:ArchiveEntry">
                     <Grid Padding="8,4" Background="Transparent">
                         <Grid.ColumnDefinitions>
@@ -116,8 +111,8 @@
                         <TextBlock Grid.Column="5" Text="{x:Bind ModifiedText}"/>
                     </Grid>
                 </DataTemplate>
-            </GridView.ItemTemplate>
-        </GridView>
+            </ListView.ItemTemplate>
+        </ListView>
 
         <ProgressBar x:Name="OperationProgress" Grid.Row="4" Height="4" Visibility="Collapsed"/>
     </Grid>

@@ -479,6 +479,8 @@ public sealed partial class ArchivePreviewPage : Page
     // ─────────────────────────────────────────────
     private async void EntryList_DragItemsStarting(object sender, DragItemsStartingEventArgs e)
     {
+        Logger.Info($"拖出开始：_archivePath={_archivePath ?? "null"}, items={e.Items.Count}", "ArchivePreviewPage");
+
         if (_archivePath == null) return;
         var entries = e.Items.OfType<ArchiveEntry>().Where(x => !x.IsDirectory).ToList();
         if (entries.Count == 0) { e.Cancel = true; return; }
@@ -498,10 +500,12 @@ public sealed partial class ArchivePreviewPage : Page
                     using (var fs = File.Create(outPath)) extractor.ExtractFile(entry.RawName, fs);
                     if (File.Exists(outPath)) files.Add(await StorageFile.GetFileFromPathAsync(outPath));
                 }
-                catch { }
+                catch (Exception ex) { Logger.Warn($"拖出单项失败：{ex.Message}", "ArchivePreviewPage"); }
             }
         }
-        catch { }
+        catch (Exception ex) { Logger.Warn($"拖出解压失败：{ex.Message}", "ArchivePreviewPage"); }
+
+        Logger.Info($"拖出：entries={entries.Count}, files={files.Count}", "ArchivePreviewPage");
 
         if (files.Count > 0)
         {
