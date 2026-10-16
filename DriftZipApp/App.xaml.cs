@@ -13,6 +13,7 @@ public partial class App : Application
 
     public App()
     {
+        Logger.Initialize();
         this.InitializeComponent();
 
         this.UnhandledException += (s, e) =>
