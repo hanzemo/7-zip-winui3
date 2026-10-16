@@ -9,6 +9,7 @@ using SharpCompress.Archives;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 using Windows.ApplicationModel.DataTransfer;
@@ -191,15 +192,36 @@ public sealed partial class ArchivePreviewPage : Page
         RefreshView();
     }
 
-    private void EntryList_DoubleTapped(object sender, DoubleTappedRoutedEventArgs e)
+    private async void EntryList_DoubleTapped(object sender, DoubleTappedRoutedEventArgs e)
     {
-        if (EntryList.SelectedItem is ArchiveEntry entry && entry.IsDirectory)
+        if (EntryList.SelectedItem is not ArchiveEntry entry) return;
+
+        if (entry.IsDirectory)
         {
             _currentPath = entry.FullPath.TrimEnd('/');
             RefreshView();
+            return;
+        }
+
+        if (_archivePath == null) return;
+
+        var tempDir = Path.Combine(Path.GetTempPath(), "DriftZipApp_Open", Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(tempDir);
+        var outPath = Path.Combine(tempDir, Path.GetFileName(entry.Name));
+
+        try
+        {
+            using var extractor = new SharpSevenZipExtractor(_archivePath);
+            using (var fs = File.Create(outPath))
+                extractor.ExtractFile(entry.FullPath, fs);
+
+            Process.Start(new ProcessStartInfo(outPath) { UseShellExecute = true });
+        }
+        catch (Exception ex)
+        {
+            await ShowDialog("打开失败", ex.Message);
         }
     }
-
     private void GoUp_Click(object sender, RoutedEventArgs e)
     {
         var current = _currentPath.Trim('/');
@@ -500,6 +522,10 @@ public sealed partial class ArchivePreviewPage : Page
         }
     }
 
+
+    // ─────────────────────────────────────────────
+    //  拖入（拖文件到此页 → 添加到压缩包）
+    // ─────────────────────────────────────────────
     private async void OnDrop(object sender, DragEventArgs e)
     {
         if (_archivePath == null) return;
@@ -521,5 +547,26 @@ public sealed partial class ArchivePreviewPage : Page
             await ShowDialog("完成", $"已添加 {files.Count} 个文件。");
         }
         catch (Exception ex) { await ShowDialog("添加失败", ex.Message); }
+    }
+
+    // ─────────────────────────────────────────────
+    //  页面离开时清理临时文件
+    // ─────────────────────────────────────────────
+    protected override void OnNavigatedFrom(NavigationEventArgs e)
+    {
+        base.OnNavigatedFrom(e);
+
+        var tempRoot = Path.Combine(Path.GetTempPath(), "DriftZipApp_Open");
+        if (!Directory.Exists(tempRoot)) return;
+
+        try
+        {
+            Directory.Delete(tempRoot, true);
+            Logger.Info("已清理临时文件", "ArchivePreviewPage");
+        }
+        catch (Exception ex)
+        {
+            Logger.Warn($"清理临时文件失败：{ex.Message}", "ArchivePreviewPage");
+        }
     }
 }
