@@ -18,17 +18,23 @@
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
-        <StackPanel Grid.Row="0" Orientation="Horizontal" Spacing="12" Margin="0,0,0,8">
-            <Button x:Name="GoUpButton" Content="↑ 返回上级" Click="GoUp_Click" Visibility="Collapsed"/>
-            <TextBlock x:Name="ArchivePathText" VerticalAlignment="Center"
-                       Style="{StaticResource BodyStrongTextBlockStyle}" Text="未加载"/>
-            <TextBlock x:Name="CurrentPathText" VerticalAlignment="Center" Foreground="Gray" Text=""/>
-            <Button Content="测试压缩包" Click="TestArchive_Click"/>
-            <Button Content="查看属性" Click="ShowProperties_Click"/>
-            <Button Content="添加文件..." Click="AddFiles_Click"/>
-            <TextBlock x:Name="OverallRatioText" VerticalAlignment="Center"
-                       Foreground="Gray" Text="" Margin="12,0,0,0"/>
-        </StackPanel>
+        <ScrollViewer Grid.Row="0"
+                      HorizontalScrollMode="Enabled"
+                      HorizontalScrollBarVisibility="Auto"
+                      VerticalScrollMode="Disabled"
+                      VerticalScrollBarVisibility="Disabled">
+            <StackPanel Orientation="Horizontal" Spacing="12" Margin="0,0,0,8">
+                <Button x:Name="GoUpButton" Content="↑ 返回上级" Click="GoUp_Click" Visibility="Collapsed"/>
+                <TextBlock x:Name="ArchivePathText" VerticalAlignment="Center"
+                           Style="{StaticResource BodyStrongTextBlockStyle}" Text="未加载"/>
+                <TextBlock x:Name="CurrentPathText" VerticalAlignment="Center" Foreground="Gray" Text=""/>
+                <Button Content="测试压缩包" Click="TestArchive_Click"/>
+                <Button Content="查看属性" Click="ShowProperties_Click"/>
+                <Button Content="添加文件..." Click="AddFiles_Click"/>
+                <TextBlock x:Name="OverallRatioText" VerticalAlignment="Center"
+                           Foreground="Gray" Text="" Margin="12,0,0,0"/>
+            </StackPanel>
+        </ScrollViewer>
 
         <AutoSuggestBox x:Name="SearchBox" Grid.Row="1"
                         PlaceholderText="搜索包内文件..."

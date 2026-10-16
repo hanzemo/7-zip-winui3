@@ -56,22 +56,32 @@ SPDX-License-Identifier: GPL-2.0-or-later
             <RowDefinition Height="*"/>
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
-
-        <StackPanel Grid.Row="0" Orientation="Horizontal" Spacing="8" Padding="12,8">
-            <Button x:Name="BackButton" Content="←" Click="Back_Click" Visibility="Collapsed" ToolTipService.ToolTip="后退"/>
-            <Button x:Name="ForwardButton" Content="→" Click="Forward_Click" Visibility="Collapsed" ToolTipService.ToolTip="前进"/>
-            <Button x:Name="UpButton" Content="↑" Click="Up_Click" Visibility="Collapsed" ToolTipService.ToolTip="上级"/>
-            <Button Content="刷新" Click="Refresh_Click"/>
-            <AutoSuggestBox x:Name="PathBox" Width="400" QuerySubmitted="PathBox_QuerySubmitted" PlaceholderText="输入路径或搜索"/>
-            <TextBlock x:Name="StatusText"
+        <Grid Grid.Row="0" Padding="12,8" ColumnSpacing="8">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+            <Button Grid.Column="0" x:Name="BackButton" Content="←" Click="Back_Click" Visibility="Collapsed" ToolTipService.ToolTip="后退"/>
+            <Button Grid.Column="1" x:Name="ForwardButton" Content="→" Click="Forward_Click" Visibility="Collapsed" ToolTipService.ToolTip="前进"/>
+            <Button Grid.Column="2" x:Name="UpButton" Content="↑" Click="Up_Click" Visibility="Collapsed" ToolTipService.ToolTip="上级"/>
+            <Button Grid.Column="3" Content="刷新" Click="Refresh_Click"/>
+            <AutoSuggestBox Grid.Column="4" x:Name="PathBox" QuerySubmitted="PathBox_QuerySubmitted" PlaceholderText="输入路径或搜索"/>
+            <TextBlock Grid.Column="5" x:Name="StatusText"
                        Text="{x:Bind ViewModel.StatusMessage, Mode=OneWay}"
-                       Foreground="Gray" VerticalAlignment="Center" Margin="12,0,0,0"/>
-        </StackPanel>
+                       Foreground="Gray" VerticalAlignment="Center" Margin="12,0,0,0"
+                       TextTrimming="CharacterEllipsis"/>
+        </Grid>
 
         <StackPanel x:Name="BreadcrumbPanel" Grid.Row="1" Orientation="Horizontal"
                     Spacing="4" Padding="12,0,12,8" Visibility="Collapsed"/>
 
         <GridView x:Name="ArchiveGridView"
+                  ScrollViewer.HorizontalScrollMode="Enabled"
+                  ScrollViewer.HorizontalScrollBarVisibility="Auto"
                   Grid.Row="2"
                   Padding="12"
                   IsItemClickEnabled="True"
