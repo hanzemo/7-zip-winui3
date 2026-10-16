@@ -43,7 +43,8 @@ public sealed partial class CompressPage : Page
         foreach (var f in files)
             if (!_files.Contains(f.Path)) _files.Add(f.Path);
 
-        FilesText.Text = string.Join(Environment.NewLine, _files);
+        FilesList.ItemsSource = null;
+        FilesList.ItemsSource = _files.ToList();
         Logger.Info($"选择文件：加了 {files.Count} 个，共 {_files.Count} 个", "CompressPage");
     }
 
@@ -57,7 +58,8 @@ public sealed partial class CompressPage : Page
         if (folder == null) return;
 
         if (!_files.Contains(folder.Path)) _files.Add(folder.Path);
-        FilesText.Text = string.Join(Environment.NewLine, _files);
+        FilesList.ItemsSource = null;
+        FilesList.ItemsSource = _files.ToList();
         Logger.Info($"选择文件夹：{folder.Path}，共 {_files.Count} 个", "CompressPage");
     }
 
@@ -169,9 +171,19 @@ public sealed partial class CompressPage : Page
     private void Cancel_Click(object sender, RoutedEventArgs e)
     {
         _files.Clear();
-        FilesText.Text = string.Empty;
+        FilesList.ItemsSource = null;
         StatusTextBlock.Text = "已取消";
+
         HideProgress();
+    }
+
+    private void RemoveFile_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is not Button btn || btn.Tag is not string path) return;
+        _files.Remove(path);
+        FilesList.ItemsSource = null;
+        FilesList.ItemsSource = _files.ToList();
+        Logger.Info($"移除：{path}，剩 {_files.Count} 个", "CompressPage");
     }
 
     // ─────────────────────────────────────────────────────
@@ -203,7 +215,8 @@ public sealed partial class CompressPage : Page
             added++;
         }
 
-        FilesText.Text = string.Join(Environment.NewLine, _files);
+        FilesList.ItemsSource = null;
+        FilesList.ItemsSource = _files.ToList();
         Logger.Info($"拖入：加了 {added} 个，共 {_files.Count} 个", "CompressPage");
     }
 }
