@@ -85,6 +85,21 @@ SPDX-License-Identifier: GPL-2.0-or-later
                   ItemTemplate="{StaticResource LargeIconTemplate}">
         </GridView>
 
+        <ListView x:Name="ArchiveListView"
+                  Grid.Row="2"
+                  Padding="12"
+                  Visibility="Collapsed"
+                  IsItemClickEnabled="True"
+                  ItemClick="ArchiveGridView_ItemClick"
+                  DoubleTapped="ArchiveGridView_DoubleTapped"
+                  RightTapped="ArchiveGridView_RightTapped"
+                  CanDragItems="True"
+                  DragItemsStarting="ArchiveGridView_DragItemsStarting"
+                  ItemsSource="{x:Bind ViewModel.ArchiveItems, Mode=OneWay}"
+                  SelectionMode="Extended"
+                  ItemTemplate="{StaticResource DetailsTemplate}">
+        </ListView>
+
         <ProgressBar x:Name="OperationProgress" Grid.Row="3" VerticalAlignment="Bottom" Height="4" Visibility="Collapsed"/>
     </Grid>
 </Page>

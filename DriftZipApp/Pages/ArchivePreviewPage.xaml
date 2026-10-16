@@ -67,6 +67,7 @@
 
         <ListView x:Name="EntryList"
                   Grid.Row="3"
+                  IsItemClickEnabled="True"
                   CanDragItems="True"
                   DragItemsStarting="EntryList_DragItemsStarting"
                   DoubleTapped="EntryList_DoubleTapped"
@@ -84,7 +85,7 @@
             </ListView.ContextFlyout>
             <ListView.ItemTemplate>
                 <DataTemplate x:DataType="local:ArchiveEntry">
-                    <Grid Padding="8,4">
+                    <Grid Padding="8,4" Background="Transparent">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*"/>
                             <ColumnDefinition Width="110"/>

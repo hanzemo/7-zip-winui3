@@ -544,9 +544,20 @@ public sealed partial class HomePage : Page
         string? tag = (sender as MenuFlyoutItem)?.Tag?.ToString();
         switch (tag)
         {
-            case "Details":    ArchiveGridView.ItemTemplate = (DataTemplate)Resources["DetailsTemplate"]; break;
-            case "LargeIcons": ArchiveGridView.ItemTemplate = (DataTemplate)Resources["LargeIconTemplate"]; break;
-            case "SmallIcons": ArchiveGridView.ItemTemplate = (DataTemplate)Resources["SmallIconTemplate"]; break;
+            case "Details":
+                ArchiveGridView.Visibility = Visibility.Collapsed;
+                ArchiveListView.Visibility = Visibility.Visible;
+                break;
+            case "LargeIcons":
+                ArchiveGridView.Visibility = Visibility.Visible;
+                ArchiveListView.Visibility = Visibility.Collapsed;
+                ArchiveGridView.ItemTemplate = (DataTemplate)Resources["LargeIconTemplate"];
+                break;
+            case "SmallIcons":
+                ArchiveGridView.Visibility = Visibility.Visible;
+                ArchiveListView.Visibility = Visibility.Collapsed;
+                ArchiveGridView.ItemTemplate = (DataTemplate)Resources["SmallIconTemplate"];
+                break;
         }
     }
 
