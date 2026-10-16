@@ -8,6 +8,8 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Windows.ApplicationModel.DataTransfer;
+using Windows.Storage;
 using Windows.Storage.Pickers;
 
 namespace DriftZipApp.Pages;
@@ -37,10 +39,26 @@ public sealed partial class CompressPage : Page
         var files = await picker.PickMultipleFilesAsync();
         if (files == null || files.Count == 0) return;
 
-        _files.Clear();
-        foreach (var f in files) _files.Add(f.Path);
+        // 追加（不去重）
+        foreach (var f in files)
+            if (!_files.Contains(f.Path)) _files.Add(f.Path);
 
         FilesText.Text = string.Join(Environment.NewLine, _files);
+        Logger.Info($"选择文件：加了 {files.Count} 个，共 {_files.Count} 个", "CompressPage");
+    }
+
+    private async void SelectFolder_Click(object sender, RoutedEventArgs e)
+    {
+        var picker = new FolderPicker();
+        picker.FileTypeFilter.Add("*");
+        var hwnd = WinRT.Interop.WindowNative.GetWindowHandle(App.MainWindow);
+        WinRT.Interop.InitializeWithWindow.Initialize(picker, hwnd);
+        var folder = await picker.PickSingleFolderAsync();
+        if (folder == null) return;
+
+        if (!_files.Contains(folder.Path)) _files.Add(folder.Path);
+        FilesText.Text = string.Join(Environment.NewLine, _files);
+        Logger.Info($"选择文件夹：{folder.Path}，共 {_files.Count} 个", "CompressPage");
     }
 
     private async void SelectOutput_Click(object sender, RoutedEventArgs e)
@@ -157,28 +175,35 @@ public sealed partial class CompressPage : Page
     }
 
     // ─────────────────────────────────────────────────────
-    //  拖入文件
+    //  拖入（多文件 + 多文件夹）
     // ─────────────────────────────────────────────────────
     private void CompressPage_DragOver(object sender, DragEventArgs e)
     {
-        if (e.DataView.Contains(Windows.ApplicationModel.DataTransfer.StandardDataFormats.StorageItems))
+        if (e.DataView.Contains(StandardDataFormats.StorageItems))
         {
-            e.AcceptedOperation = Windows.ApplicationModel.DataTransfer.DataPackageOperation.Copy;
+            e.AcceptedOperation = DataPackageOperation.Copy;
             e.DragUIOverride.Caption = "拖到此处添加";
         }
     }
 
     private async void CompressPage_Drop(object sender, DragEventArgs e)
     {
-        if (!e.DataView.Contains(Windows.ApplicationModel.DataTransfer.StandardDataFormats.StorageItems)) return;
+        if (!e.DataView.Contains(StandardDataFormats.StorageItems)) return;
 
         var items = await e.DataView.GetStorageItemsAsync();
-        var paths = items.Select(i => i.Path).Where(p => !string.IsNullOrEmpty(p)).ToList();
-        if (paths.Count == 0) return;
+        if (items.Count == 0) return;
 
-        foreach (var p in paths)
-            if (!_files.Contains(p)) _files.Add(p);
+        int added = 0;
+        foreach (var item in items)
+        {
+            var path = item.Path;
+            if (string.IsNullOrEmpty(path)) continue;
+            if (_files.Contains(path)) continue;
+            _files.Add(path);
+            added++;
+        }
 
         FilesText.Text = string.Join(Environment.NewLine, _files);
+        Logger.Info($"拖入：加了 {added} 个，共 {_files.Count} 个", "CompressPage");
     }
 }
