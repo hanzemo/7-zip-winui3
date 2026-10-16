@@ -78,6 +78,12 @@ SPDX-License-Identifier: GPL-2.0-or-later
                   ItemClick="ArchiveGridView_ItemClick"
                   DoubleTapped="ArchiveGridView_DoubleTapped"
                   RightTapped="ArchiveGridView_RightTapped"
+                  CanDragItems="True"
+                  DragItemsStarting="ArchiveGridView_DragItemsStarting"
+                  CanDragItems="True"
+                  DragItemsStarting="ArchiveGridView_DragItemsStarting"
+                  CanDragItems="True"
+                  DragItemsStarting="ArchiveGridView_DragItemsStarting"
                   ItemsSource="{x:Bind ViewModel.ArchiveItems, Mode=OneWay}"
                   SelectionMode="Extended"
                   ItemTemplate="{StaticResource LargeIconTemplate}">

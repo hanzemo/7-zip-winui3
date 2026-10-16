@@ -35,6 +35,22 @@ public partial class App : Application
             MainWindow = new Views.MainWindow();
             MainWindow.Activate();
 
+            // ── 应用保存的主题 ──
+            try
+            {
+                var settings = DriftZipApp.Services.AppSettings.Current;
+                if (MainWindow.Content is FrameworkElement root)
+                {
+                    root.RequestedTheme = settings.Theme switch
+                    {
+                        0 => ElementTheme.Light,
+                        1 => ElementTheme.Dark,
+                        _ => ElementTheme.Default,
+                    };
+                }
+            }
+            catch { }
+
             HandleActivation();
             HandleCommandLine();
         }

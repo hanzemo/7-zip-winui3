@@ -174,6 +174,25 @@ public sealed partial class HomePage : Page
             menu.Items.Add(new MenuFlyoutSeparator());
         }
 
+
+        menu.Items.Add(new MenuFlyoutSeparator());
+
+        // ── 浏览模式切换 ──
+        if (isExplorer)
+        {
+            var switchScan = new MenuFlyoutItem { Text = "扫描压缩包" };
+            switchScan.Click += BrowseMode_Click;
+            switchScan.Tag = "ScanArchives";
+            menu.Items.Add(switchScan);
+        }
+
+        if (ViewModel.BrowseMode == BrowseMode.ScanArchives)
+        {
+            var switchPC = new MenuFlyoutItem { Text = "浏览此电脑" };
+            switchPC.Click += BrowseMode_Click;
+            switchPC.Tag = "ThisPC";
+            menu.Items.Add(switchPC);
+        }
         AddViewMenu(menu);
         return menu;
     }
@@ -639,6 +658,41 @@ public sealed partial class HomePage : Page
         }
         catch (Exception ex) { ViewModel.StatusMessage = $"压缩失败：{ex.Message}"; }
         finally { HideProgress(); ViewModel.Refresh(); }
+    }
+
+    // ─────────────────────────────────────────────────────
+    //  拖出（拖文件到资源管理器）
+    // ─────────────────────────────────────────────────────
+    private async void ArchiveGridView_DragItemsStarting(object sender, DragItemsStartingEventArgs e)
+    {
+        var items = e.Items.OfType<ArchiveItem>()
+            .Where(x => !x.IsDirectory && !string.IsNullOrEmpty(x.Path))
+            .ToList();
+
+        if (items.Count == 0) { e.Cancel = true; return; }
+
+        var tempDir = Path.Combine(Path.GetTempPath(), "DriftZipApp_Drag", Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(tempDir);
+        var files = new List<StorageFile>();
+
+        foreach (var item in items)
+        {
+            try
+            {
+                var dest = Path.Combine(tempDir, item.Name);
+                File.Copy(item.Path!, dest, true);
+                if (File.Exists(dest))
+                    files.Add(await StorageFile.GetFileFromPathAsync(dest));
+            }
+            catch { }
+        }
+
+        if (files.Count > 0)
+        {
+            e.Data.SetStorageItems(files);
+            e.Data.RequestedOperation = DataPackageOperation.Copy;
+        }
+        else e.Cancel = true;
     }
 }
 

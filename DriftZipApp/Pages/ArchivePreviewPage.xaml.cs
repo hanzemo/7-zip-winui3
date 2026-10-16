@@ -54,6 +54,7 @@ public sealed partial class ArchivePreviewPage : Page
                 .Select(f => new ArchiveEntry
                 {
                     FullPath = f.FileName.Replace('\\', '/').TrimStart('/'),
+                    RawName = f.FileName,
                     Name = Path.GetFileName(f.FileName.TrimEnd('/', '\\')),
                     Size = f.Size,
                     CompressedSize = 0,
@@ -213,7 +214,7 @@ public sealed partial class ArchivePreviewPage : Page
         {
             using var extractor = new SharpSevenZipExtractor(_archivePath);
             using (var fs = File.Create(outPath))
-                extractor.ExtractFile(entry.FullPath, fs);
+                extractor.ExtractFile(entry.RawName, fs);
 
             Process.Start(new ProcessStartInfo(outPath) { UseShellExecute = true });
         }
@@ -310,7 +311,7 @@ public sealed partial class ArchivePreviewPage : Page
         try
         {
             var engine = new DriftZipEngine();
-            await engine.RenameEntryAsync(_archivePath, entry.FullPath, newName, null);
+            await engine.RenameEntryAsync(_archivePath, entry.RawName, newName, null);
             LoadArchive(_archivePath);
         }
         catch (Exception ex) { await ShowDialog("重命名失败", ex.Message); }
@@ -334,7 +335,7 @@ public sealed partial class ArchivePreviewPage : Page
         try
         {
             var engine = new DriftZipEngine();
-            await engine.DeleteEntriesAsync(_archivePath, entries.Select(x => x.FullPath), null);
+            await engine.DeleteEntriesAsync(_archivePath, entries.Select(x => x.RawName), null);
             LoadArchive(_archivePath);
         }
         catch (Exception ex) { await ShowDialog("删除失败", ex.Message); }
@@ -415,7 +416,7 @@ public sealed partial class ArchivePreviewPage : Page
         {
             var engine = new DriftZipEngine();
             var progress = new Progress<int>(pct => OperationProgress.Value = pct);
-            await engine.ExtractSelectedAsync(_archivePath, entries.Select(x => x.FullPath),
+            await engine.ExtractSelectedAsync(_archivePath, entries.Select(x => x.RawName),
                 target.Path, null, progress, policy.Value);
         }
         catch (Exception ex) { await ShowDialog("解压失败", ex.Message); }
@@ -436,7 +437,7 @@ public sealed partial class ArchivePreviewPage : Page
         try
         {
             var engine = new DriftZipEngine();
-            await engine.ExtractSelectedAsync(_archivePath, entries.Select(x => x.FullPath),
+            await engine.ExtractSelectedAsync(_archivePath, entries.Select(x => x.RawName),
                 targetDir, null, null, policy.Value);
         }
         catch (Exception ex) { await ShowDialog("解压失败", ex.Message); }
@@ -494,7 +495,7 @@ public sealed partial class ArchivePreviewPage : Page
                 try
                 {
                     var outPath = Path.Combine(tempDir, Path.GetFileName(entry.Name));
-                    using (var fs = File.Create(outPath)) extractor.ExtractFile(entry.FullPath, fs);
+                    using (var fs = File.Create(outPath)) extractor.ExtractFile(entry.RawName, fs);
                     if (File.Exists(outPath)) files.Add(await StorageFile.GetFileFromPathAsync(outPath));
                 }
                 catch { }

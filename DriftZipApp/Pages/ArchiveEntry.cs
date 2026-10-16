@@ -8,6 +8,7 @@ public class ArchiveEntry
 {
     public string Name { get; set; } = "";
     public string FullPath { get; set; } = "";
+    public string RawName { get; set; } = "";
     public ulong Size { get; set; }
     public long CompressedSize { get; set; }
     public uint Crc { get; set; }
