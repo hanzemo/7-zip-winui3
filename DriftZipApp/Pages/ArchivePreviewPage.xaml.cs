@@ -482,7 +482,8 @@ public sealed partial class ArchivePreviewPage : Page
         Logger.Info($"拖出开始：_archivePath={_archivePath ?? "null"}, items={e.Items.Count}", "ArchivePreviewPage");
 
         if (_archivePath == null) return;
-        var entries = e.Items.OfType<ArchiveEntry>().Where(x => !x.IsDirectory).ToList();
+        Logger.Info($"拖出：e.Items.Count={e.Items.Count}, 类型={e.Items.FirstOrDefault()?.GetType().FullName ?? "null"}", "ArchivePreviewPage");
+        var entries = EntryList.SelectedItems.OfType<ArchiveEntry>().Where(x => !x.IsDirectory).ToList();
         if (entries.Count == 0) { e.Cancel = true; return; }
 
         var tempDir = Path.Combine(Path.GetTempPath(), "DriftZipApp_Drag", Guid.NewGuid().ToString("N"));
