@@ -39,12 +39,10 @@ public sealed partial class CompressPage : Page
         var files = await picker.PickMultipleFilesAsync();
         if (files == null || files.Count == 0) return;
 
-        // 追加（不去重）
         foreach (var f in files)
             if (!_files.Contains(f.Path)) _files.Add(f.Path);
 
-        FilesList.ItemsSource = null;
-        FilesList.ItemsSource = _files.ToList();
+        RefreshFilesList();
         Logger.Info($"选择文件：加了 {files.Count} 个，共 {_files.Count} 个", "CompressPage");
     }
 
@@ -58,9 +56,29 @@ public sealed partial class CompressPage : Page
         if (folder == null) return;
 
         if (!_files.Contains(folder.Path)) _files.Add(folder.Path);
+        RefreshFilesList();
+        Logger.Info($"选择文件夹：{folder.Path}，共 {_files.Count} 个", "CompressPage");
+    }
+
+    private void RemoveFile_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is not Button btn || btn.Tag is not string path) return;
+        _files.Remove(path);
+        RefreshFilesList();
+        Logger.Info($"移除：{path}，剩 {_files.Count} 个", "CompressPage");
+    }
+
+    private void ClearFiles_Click(object sender, RoutedEventArgs e)
+    {
+        _files.Clear();
+        RefreshFilesList();
+        Logger.Info("清空文件列表", "CompressPage");
+    }
+
+    private void RefreshFilesList()
+    {
         FilesList.ItemsSource = null;
         FilesList.ItemsSource = _files.ToList();
-        Logger.Info($"选择文件夹：{folder.Path}，共 {_files.Count} 个", "CompressPage");
     }
 
     private async void SelectOutput_Click(object sender, RoutedEventArgs e)
@@ -171,40 +189,11 @@ public sealed partial class CompressPage : Page
     private void Cancel_Click(object sender, RoutedEventArgs e)
     {
         _files.Clear();
-        FilesList.ItemsSource = null;
+        RefreshFilesList();
         StatusTextBlock.Text = "已取消";
-
         HideProgress();
-
-    private void ClearFiles_Click(object sender, RoutedEventArgs e)
-    {
-        _files.Clear();
-        FilesList.ItemsSource = null;
-        FilesList.ItemsSource = _files.ToList();
-        Logger.Info("清空文件列表", "CompressPage");
     }
 
-    private void ClearFiles_Click(object sender, RoutedEventArgs e)
-    {
-        _files.Clear();
-        FilesList.ItemsSource = null;
-        FilesList.ItemsSource = _files.ToList();
-        Logger.Info("清空文件列表", "CompressPage");
-    }
-    }
-
-    private void RemoveFile_Click(object sender, RoutedEventArgs e)
-    {
-        if (sender is not Button btn || btn.Tag is not string path) return;
-        _files.Remove(path);
-        FilesList.ItemsSource = null;
-        FilesList.ItemsSource = _files.ToList();
-        Logger.Info($"移除：{path}，剩 {_files.Count} 个", "CompressPage");
-    }
-
-    // ─────────────────────────────────────────────────────
-    //  拖入（多文件 + 多文件夹）
-    // ─────────────────────────────────────────────────────
     private void CompressPage_DragOver(object sender, DragEventArgs e)
     {
         if (e.DataView.Contains(StandardDataFormats.StorageItems))
@@ -231,8 +220,7 @@ public sealed partial class CompressPage : Page
             added++;
         }
 
-        FilesList.ItemsSource = null;
-        FilesList.ItemsSource = _files.ToList();
+        RefreshFilesList();
         Logger.Info($"拖入：加了 {added} 个，共 {_files.Count} 个", "CompressPage");
     }
 }

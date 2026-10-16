@@ -152,22 +152,15 @@ public sealed partial class HomePage : Page
 
             var extractHere = new MenuFlyoutItem { Text = "解压到此目录" };
             extractHere.Click += ExtractHere_Click;
-
-            var batchSame = new MenuFlyoutItem { Text = "批量解压到同一目录" };
-            batchSame.Click += BatchExtractSame_Click;
-            menu.Items.Add(batchSame);
-
-            var batchSeparate = new MenuFlyoutItem { Text = "批量解压到各自文件夹" };
-            batchSeparate.Click += BatchExtractSeparate_Click;
-            menu.Items.Add(batchSeparate);
-            var batchSame = new MenuFlyoutItem { Text = "批量解压到同一目录" };
-            batchSame.Click += BatchExtractSame_Click;
-            menu.Items.Add(batchSame);
-
-            var batchSeparate = new MenuFlyoutItem { Text = "批量解压到各自文件夹" };
-            batchSeparate.Click += BatchExtractSeparate_Click;
-            menu.Items.Add(batchSeparate);
             menu.Items.Add(extractHere);
+
+            var batchSame = new MenuFlyoutItem { Text = "批量解压到同一目录" };
+            batchSame.Click += BatchExtractSame_Click;
+            menu.Items.Add(batchSame);
+
+            var batchSeparate = new MenuFlyoutItem { Text = "批量解压到各自文件夹" };
+            batchSeparate.Click += BatchExtractSeparate_Click;
+            menu.Items.Add(batchSeparate);
 
             var testArchive = new MenuFlyoutItem { Text = "测试压缩包" };
             testArchive.Click += TestArchive_Click;
@@ -189,7 +182,6 @@ public sealed partial class HomePage : Page
             menu.Items.Add(new MenuFlyoutSeparator());
         }
 
-
         menu.Items.Add(new MenuFlyoutSeparator());
 
         // ── 浏览模式切换 ──
@@ -208,6 +200,7 @@ public sealed partial class HomePage : Page
             switchPC.Tag = "ThisPC";
             menu.Items.Add(switchPC);
         }
+
         AddViewMenu(menu);
         return menu;
     }
@@ -339,6 +332,71 @@ public sealed partial class HomePage : Page
             ViewModel.StatusMessage = $"解压完成：{ok} 项";
         }
         catch (Exception ex) { ViewModel.StatusMessage = $"解压失败: {ex.Message}"; }
+        finally { HideProgress(); ViewModel.Refresh(); }
+    }
+
+    private async void BatchExtractSame_Click(object sender, RoutedEventArgs e)
+    {
+        var items = GetTargetItems();
+        if (items.Count == 0) return;
+
+        var folder = new FolderPicker();
+        var hwnd = WinRT.Interop.WindowNative.GetWindowHandle(App.MainWindow);
+        WinRT.Interop.InitializeWithWindow.Initialize(folder, hwnd);
+        folder.FileTypeFilter.Add("*");
+        var target = await folder.PickSingleFolderAsync();
+        if (target == null) return;
+
+        var engine = new DriftZipEngine();
+        int ok = 0, fail = 0;
+        ShowProgress("正在批量解压...");
+        try
+        {
+            foreach (var item in items)
+            {
+                if (string.IsNullOrEmpty(item.Path) || item.IsDirectory) continue;
+                try
+                {
+                    await Task.Run(() => engine.Extract(item.Path!, target.Path, null, MakeProgress(), CancellationToken.None));
+                    ok++;
+                }
+                catch { fail++; }
+            }
+            ViewModel.StatusMessage = $"批量解压完成：{ok} 成功，{fail} 失败";
+        }
+        finally { HideProgress(); ViewModel.Refresh(); }
+    }
+
+    private async void BatchExtractSeparate_Click(object sender, RoutedEventArgs e)
+    {
+        var items = GetTargetItems();
+        if (items.Count == 0) return;
+
+        var folder = new FolderPicker();
+        var hwnd = WinRT.Interop.WindowNative.GetWindowHandle(App.MainWindow);
+        WinRT.Interop.InitializeWithWindow.Initialize(folder, hwnd);
+        folder.FileTypeFilter.Add("*");
+        var target = await folder.PickSingleFolderAsync();
+        if (target == null) return;
+
+        var engine = new DriftZipEngine();
+        int ok = 0, fail = 0;
+        ShowProgress("正在批量解压...");
+        try
+        {
+            foreach (var item in items)
+            {
+                if (string.IsNullOrEmpty(item.Path) || item.IsDirectory) continue;
+                var dest = Path.Combine(target.Path, Path.GetFileNameWithoutExtension(item.Path));
+                try
+                {
+                    await Task.Run(() => engine.Extract(item.Path!, dest, null, MakeProgress(), CancellationToken.None));
+                    ok++;
+                }
+                catch { fail++; }
+            }
+            ViewModel.StatusMessage = $"批量解压完成：{ok} 成功，{fail} 失败";
+        }
         finally { HideProgress(); ViewModel.Refresh(); }
     }
 
@@ -617,71 +675,6 @@ public sealed partial class HomePage : Page
             acc = string.IsNullOrEmpty(acc) ? part : $"{acc}\\{part}";
             BreadcrumbPanel.Children.Add(new TextBlock { Text = ">", VerticalAlignment = Microsoft.UI.Xaml.VerticalAlignment.Center });
 
-
-    private async void BatchExtractSame_Click(object sender, RoutedEventArgs e)
-    {
-        var items = GetTargetItems();
-        if (items.Count == 0) return;
-
-        var folder = new FolderPicker();
-        folder.FileTypeFilter.Add("*");
-        var hwnd = WinRT.Interop.WindowNative.GetWindowHandle(App.MainWindow);
-        WinRT.Interop.InitializeWithWindow.Initialize(folder, hwnd);
-        var target = await folder.PickSingleFolderAsync();
-        if (target == null) return;
-
-        var engine = new DriftZipEngine();
-        int ok = 0, fail = 0;
-        ShowProgress("正在批量解压...");
-        try
-        {
-            foreach (var item in items)
-            {
-                if (string.IsNullOrEmpty(item.Path) || item.IsDirectory) continue;
-                try
-                {
-                    await Task.Run(() => engine.Extract(item.Path!, target.Path, null, MakeProgress(), CancellationToken.None));
-                    ok++;
-                }
-                catch { fail++; }
-            }
-            ViewModel.StatusMessage = $"批量解压完成：{ok} 成功，{fail} 失败";
-        }
-        finally { HideProgress(); ViewModel.Refresh(); }
-    }
-
-    private async void BatchExtractSeparate_Click(object sender, RoutedEventArgs e)
-    {
-        var items = GetTargetItems();
-        if (items.Count == 0) return;
-
-        var folder = new FolderPicker();
-        folder.FileTypeFilter.Add("*");
-        var hwnd = WinRT.Interop.WindowNative.GetWindowHandle(App.MainWindow);
-        WinRT.Interop.InitializeWithWindow.Initialize(folder, hwnd);
-        var target = await folder.PickSingleFolderAsync();
-        if (target == null) return;
-
-        var engine = new DriftZipEngine();
-        int ok = 0, fail = 0;
-        ShowProgress("正在批量解压...");
-        try
-        {
-            foreach (var item in items)
-            {
-                if (string.IsNullOrEmpty(item.Path) || item.IsDirectory) continue;
-                var dest = Path.Combine(target.Path, Path.GetFileNameWithoutExtension(item.Path));
-                try
-                {
-                    await Task.Run(() => engine.Extract(item.Path!, dest, null, MakeProgress(), CancellationToken.None));
-                    ok++;
-                }
-                catch { fail++; }
-            }
-            ViewModel.StatusMessage = $"批量解压完成：{ok} 成功，{fail} 失败";
-        }
-        finally { HideProgress(); ViewModel.Refresh(); }
-    }
             var capturedPath = acc;
             var btn = new HyperlinkButton { Content = part };
             btn.Click += (s, e) => { ViewModel.NavigateTo(capturedPath); UpdateToolbar(); };
@@ -751,9 +744,6 @@ public sealed partial class HomePage : Page
         finally { HideProgress(); ViewModel.Refresh(); }
     }
 
-    // ─────────────────────────────────────────────────────
-    //  拖出（拖文件到资源管理器）
-    // ─────────────────────────────────────────────────────
     private async void ArchiveGridView_DragItemsStarting(object sender, DragItemsStartingEventArgs e)
     {
         var items = e.Items.OfType<ArchiveItem>()
@@ -788,71 +778,7 @@ public sealed partial class HomePage : Page
 }
 
 // ═════════════════════════════════════════════════════════
-    private async void BatchExtractSame_Click(object sender, RoutedEventArgs e)
-    {
-        var items = GetTargetItems();
-        if (items.Count == 0) return;
-
-        var folder = new FolderPicker();
-        folder.FileTypeFilter.Add("*");
-        var hwnd = WinRT.Interop.WindowNative.GetWindowHandle(App.MainWindow);
-        WinRT.Interop.InitializeWithWindow.Initialize(folder, hwnd);
-        var target = await folder.PickSingleFolderAsync();
-        if (target == null) return;
-
-        var engine = new DriftZipEngine();
-        int ok = 0, fail = 0;
-        ShowProgress("正在批量解压...");
-        try
-        {
-            foreach (var item in items)
-            {
-                if (string.IsNullOrEmpty(item.Path) || item.IsDirectory) continue;
-                try
-                {
-                    await Task.Run(() => engine.Extract(item.Path!, target.Path, null, MakeProgress(), CancellationToken.None));
-                    ok++;
-                }
-                catch { fail++; }
-            }
-            ViewModel.StatusMessage = $"批量解压完成：{ok} 成功，{fail} 失败";
-        }
-        finally { HideProgress(); ViewModel.Refresh(); }
-    }
-
-    private async void BatchExtractSeparate_Click(object sender, RoutedEventArgs e)
-    {
-        var items = GetTargetItems();
-        if (items.Count == 0) return;
-
-        var folder = new FolderPicker();
-        folder.FileTypeFilter.Add("*");
-        var hwnd = WinRT.Interop.WindowNative.GetWindowHandle(App.MainWindow);
-        WinRT.Interop.InitializeWithWindow.Initialize(folder, hwnd);
-        var target = await folder.PickSingleFolderAsync();
-        if (target == null) return;
-
-        var engine = new DriftZipEngine();
-        int ok = 0, fail = 0;
-        ShowProgress("正在批量解压...");
-        try
-        {
-            foreach (var item in items)
-            {
-                if (string.IsNullOrEmpty(item.Path) || item.IsDirectory) continue;
-                var dest = Path.Combine(target.Path, Path.GetFileNameWithoutExtension(item.Path));
-                try
-                {
-                    await Task.Run(() => engine.Extract(item.Path!, dest, null, MakeProgress(), CancellationToken.None));
-                    ok++;
-                }
-                catch { fail++; }
-            }
-            ViewModel.StatusMessage = $"批量解压完成：{ok} 成功，{fail} 失败";
-        }
-        finally { HideProgress(); ViewModel.Refresh(); }
-    }
-//  HomeViewModel（和原来一样，没改）
+//  HomeViewModel
 // ═════════════════════════════════════════════════════════
 public partial class HomeViewModel : ObservableObject
 {
@@ -971,7 +897,7 @@ public partial class HomeViewModel : ObservableObject
 
     public void Paste()
     {
-         if (_clipboard.Count == 0) return;
+        if (_clipboard.Count == 0) return;
         var dest = CurrentPath;
         if (string.IsNullOrEmpty(dest) || !Directory.Exists(dest)) { StatusMessage = "无法粘贴到此位置"; return; }
 

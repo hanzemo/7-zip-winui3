@@ -71,6 +71,13 @@ public sealed partial class ExtractPage : Page
         RefreshList();
     }
 
+    private void ClearArchives_Click(object sender, RoutedEventArgs e)
+    {
+        _archives.Clear();
+        RefreshList();
+        Logger.Info("清空压缩包列表", "ExtractPage");
+    }
+
     private void RefreshList()
     {
         ArchivesList.ItemsSource = null;
@@ -124,24 +131,13 @@ public sealed partial class ExtractPage : Page
     {
         _archives.Clear();
         _outputPath = string.Empty;
-        ArchivesList.ItemsSource = null;
+        RefreshList();
         ExtractToBox.Text = string.Empty;
         PasswordBox.Password = string.Empty;
         StatusTextBlock.Text = "已取消";
         HideProgress();
     }
 
-    private void ClearArchives_Click(object sender, RoutedEventArgs e)
-    {
-        _archives.Clear();
-        ArchivesList.ItemsSource = null;
-        ArchivesList.ItemsSource = _archives.ToList();
-        Logger.Info("清空压缩包列表", "ExtractPage");
-    }
-
-    // ─────────────────────────────────────────────────────
-    //  拖入
-    // ─────────────────────────────────────────────────────
     private void ExtractPage_DragOver(object sender, DragEventArgs e)
     {
         if (e.DataView.Contains(StandardDataFormats.StorageItems))

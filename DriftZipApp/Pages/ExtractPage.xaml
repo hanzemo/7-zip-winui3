@@ -28,7 +28,7 @@ SPDX-License-Identifier: GPL-2.0-or-later
 
         <ScrollViewer Grid.Row="1">
             <StackPanel Padding="16">
-                <TextBlock Text="选择压缩包（可拖入）" Style="{StaticResource SubtitleTextBlockStyle}" Margin="0,0,0,8"/>
+                <TextBlock Text="选择压缩包（可拖入，可多选）" Style="{StaticResource SubtitleTextBlockStyle}" Margin="0,0,0,8"/>
                 <Grid Margin="0,0,0,16">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*"/>
@@ -70,7 +70,7 @@ SPDX-License-Identifier: GPL-2.0-or-later
                 <TextBlock Text="解压模式" Style="{StaticResource SubtitleTextBlockStyle}" Margin="0,0,0,8"/>
                 <ComboBox x:Name="ModeCombo" Margin="0,0,0,16">
                     <ComboBoxItem Content="解压到同一目录" Tag="Same" IsSelected="True"/>
-                    <ComboBoxItem Content="每个包解压到各自文件�夹" Tag="Separate"/>
+                    <ComboBoxItem Content="每个包解压到各自文件夹" Tag="Separate"/>
                 </ComboBox>
 
                 <TextBlock Text="密码 (可选)" Style="{StaticResource SubtitleTextBlockStyle}" Margin="0,0,0,8"/>
