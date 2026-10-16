@@ -34,6 +34,7 @@ SPDX-License-Identifier: GPL-2.0-or-later
                         <ColumnDefinition Width="*"/>
                         <ColumnDefinition Width="Auto"/>
                         <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="Auto"/>
                     </Grid.ColumnDefinitions>
                     <ListView Grid.Column="0" x:Name="FilesList" MaxHeight="200" SelectionMode="None">
                         <ListView.ItemTemplate>
@@ -55,7 +56,9 @@ SPDX-License-Identifier: GPL-2.0-or-later
                     </ListView>
                     <Button Grid.Column="1" Content="选择文件" Click="SelectFiles_Click" Margin="8,0,0,0" VerticalAlignment="Top"/>
                     <Button Grid.Column="2" Content="选择文件夹" Click="SelectFolder_Click" Margin="8,0,0,0" VerticalAlignment="Top"/>
+                    <Button Grid.Column="3" Content="清空" Click="ClearFiles_Click" Margin="8,0,0,0" VerticalAlignment="Top"/>
                 </Grid>
+
                 <TextBlock Text="输出路径" Style="{StaticResource SubtitleTextBlockStyle}" Margin="0,0,0,8"/>
                 <Grid Margin="0,0,0,16">
                     <Grid.ColumnDefinitions>

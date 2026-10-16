@@ -8,13 +8,16 @@ SPDX-License-Identifier: GPL-2.0-or-later
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d"
+    AllowDrop="True"
+    DragOver="ExtractPage_DragOver"
+    Drop="ExtractPage_Drop"
     Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
 
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
-        <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
@@ -25,14 +28,33 @@ SPDX-License-Identifier: GPL-2.0-or-later
 
         <ScrollViewer Grid.Row="1">
             <StackPanel Padding="16">
-                <TextBlock Text="选择压缩包" Style="{StaticResource SubtitleTextBlockStyle}" Margin="0,0,0,8"/>
+                <TextBlock Text="选择压缩包（可拖入）" Style="{StaticResource SubtitleTextBlockStyle}" Margin="0,0,0,8"/>
                 <Grid Margin="0,0,0,16">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*"/>
                         <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="Auto"/>
                     </Grid.ColumnDefinitions>
-                    <TextBox Grid.Column="0" x:Name="ArchivePathBox" PlaceholderText="压缩包路径" IsReadOnly="True"/>
-                    <Button Grid.Column="1" Content="选择文件" Click="SelectArchive_Click" Margin="8,0,0,0"/>
+                    <ListView Grid.Column="0" x:Name="ArchivesList" MaxHeight="200" SelectionMode="None">
+                        <ListView.ItemTemplate>
+                            <DataTemplate x:DataType="x:String">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Grid.Column="0" Text="{x:Bind}" TextTrimming="CharacterEllipsis"
+                                               VerticalAlignment="Center"/>
+                                    <Button Grid.Column="1" Content="✕" Click="RemoveArchive_Click" Tag="{x:Bind}"
+                                            Width="28" Height="28" Padding="0" Margin="4,0,0,0"
+                                            Background="Transparent" BorderThickness="0"
+                                            ToolTipService.ToolTip="移除"/>
+                                </Grid>
+                            </DataTemplate>
+                        </ListView.ItemTemplate>
+                    </ListView>
+                    <Button Grid.Column="1" Content="选择压缩包" Click="SelectArchive_Click" Margin="8,0,0,0" VerticalAlignment="Top"/>
+                    <Button Grid.Column="2" Content="清空" Click="ClearArchives_Click" Margin="8,0,0,0" VerticalAlignment="Top"/>
                 </Grid>
 
                 <TextBlock Text="解压到" Style="{StaticResource SubtitleTextBlockStyle}" Margin="0,0,0,8"/>
@@ -44,6 +66,12 @@ SPDX-License-Identifier: GPL-2.0-or-later
                     <TextBox Grid.Column="0" x:Name="ExtractToBox" PlaceholderText="目标目录" IsReadOnly="True"/>
                     <Button Grid.Column="1" Content="选择文件夹" Click="SelectOutput_Click" Margin="8,0,0,0"/>
                 </Grid>
+
+                <TextBlock Text="解压模式" Style="{StaticResource SubtitleTextBlockStyle}" Margin="0,0,0,8"/>
+                <ComboBox x:Name="ModeCombo" Margin="0,0,0,16">
+                    <ComboBoxItem Content="解压到同一目录" Tag="Same" IsSelected="True"/>
+                    <ComboBoxItem Content="每个包解压到各自文件�夹" Tag="Separate"/>
+                </ComboBox>
 
                 <TextBlock Text="密码 (可选)" Style="{StaticResource SubtitleTextBlockStyle}" Margin="0,0,0,8"/>
                 <PasswordBox x:Name="PasswordBox" PlaceholderText="输入密码" Margin="0,0,0,16"/>

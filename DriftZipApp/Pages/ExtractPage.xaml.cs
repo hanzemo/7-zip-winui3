@@ -2,21 +2,23 @@
 //
 // ExtractPage.xaml.cs
 
-using WinRT.Interop;
-using CommunityToolkit.Mvvm.Input;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Windows.ApplicationModel.DataTransfer;
+using Windows.Storage;
 using Windows.Storage.Pickers;
 
 namespace DriftZipApp.Pages;
 
 public sealed partial class ExtractPage : Page
 {
-    private string _archivePath = string.Empty;
+    private readonly List<string> _archives = new();
     private string _outputPath = string.Empty;
 
     public ExtractPage()
@@ -27,8 +29,6 @@ public sealed partial class ExtractPage : Page
 
     private async void SelectArchive_Click(object sender, RoutedEventArgs e)
     {
-        Logger.Info("打开压缩包选择器", "ExtractPage");
-
         var picker = new FileOpenPicker
         {
             ViewMode = PickerViewMode.List,
@@ -39,20 +39,21 @@ public sealed partial class ExtractPage : Page
 
         var hwnd = WinRT.Interop.WindowNative.GetWindowHandle(App.MainWindow);
         WinRT.Interop.InitializeWithWindow.Initialize(picker, hwnd);
-        var file = await picker.PickSingleFileAsync();
-        if (file != null)
-        {
-            _archivePath = file.Path;
-            ArchivePathBox.Text = _archivePath;
-            Logger.Info($"选择了压缩包：{_archivePath}", "ExtractPage");
-        }
+
+        var files = await picker.PickMultipleFilesAsync();
+        if (files == null || files.Count == 0) return;
+
+        foreach (var f in files)
+            if (!_archives.Contains(f.Path)) _archives.Add(f.Path);
+
+        RefreshList();
+        Logger.Info($"选择压缩包：加了 {files.Count} 个，共 {_archives.Count} 个", "ExtractPage");
     }
 
     private async void SelectOutput_Click(object sender, RoutedEventArgs e)
     {
-        Logger.Info("打开目标文件夹选择器", "ExtractPage");
-
         var picker = new FolderPicker();
+        picker.FileTypeFilter.Add("*");
         var hwnd = WinRT.Interop.WindowNative.GetWindowHandle(App.MainWindow);
         WinRT.Interop.InitializeWithWindow.Initialize(picker, hwnd);
         var folder = await picker.PickSingleFolderAsync();
@@ -60,70 +61,111 @@ public sealed partial class ExtractPage : Page
         {
             _outputPath = folder.Path;
             ExtractToBox.Text = _outputPath;
-            Logger.Info($"选择了解压目录：{_outputPath}", "ExtractPage");
         }
+    }
+
+    private void RemoveArchive_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is not Button btn || btn.Tag is not string path) return;
+        _archives.Remove(path);
+        RefreshList();
+    }
+
+    private void RefreshList()
+    {
+        ArchivesList.ItemsSource = null;
+        ArchivesList.ItemsSource = _archives.ToList();
     }
 
     private async void Extract_Click(object sender, RoutedEventArgs e)
     {
-        if (string.IsNullOrEmpty(_archivePath))
-        {
-            StatusTextBlock.Text = "请先选择压缩包";
-            return;
-        }
-        if (string.IsNullOrEmpty(_outputPath))
-        {
-            StatusTextBlock.Text = "请选择解压目录";
-            return;
-        }
+        if (_archives.Count == 0) { StatusTextBlock.Text = "请先选择压缩包"; return; }
+        if (string.IsNullOrEmpty(_outputPath)) { StatusTextBlock.Text = "请选择解压目录"; return; }
 
         var password = string.IsNullOrEmpty(PasswordBox.Password) ? null : PasswordBox.Password;
+        var separate = (ModeCombo.SelectedItem as ComboBoxItem)?.Tag?.ToString() == "Separate";
 
         StatusTextBlock.Text = "正在解压...";
-        Logger.Info($"开始解压：{_archivePath} -> {_outputPath}", "ExtractPage");
-
         ShowProgress();
+
+        var engine = new DriftZipEngine();
+        int ok = 0, fail = 0;
+
         try
         {
-            var engine = new DriftZipEngine();
-            var progress = new Progress<int>(pct => OperationProgress.Value = pct);
-            await Task.Run(() => engine.Extract(_archivePath, _outputPath, password, progress, CancellationToken.None));
-            StatusTextBlock.Text = $"解压完成：{_outputPath}";
-            Logger.Info("解压操作完成", "ExtractPage");
+            foreach (var archive in _archives.ToList())
+            {
+                try
+                {
+                    var dest = separate
+                        ? Path.Combine(_outputPath, Path.GetFileNameWithoutExtension(archive))
+                        : _outputPath;
+
+                    Logger.Info($"解压：{archive} → {dest}", "ExtractPage");
+
+                    await Task.Run(() => engine.Extract(archive, dest, password, null, CancellationToken.None));
+                    ok++;
+                }
+                catch (Exception ex)
+                {
+                    fail++;
+                    Logger.Warn($"解压 {archive} 失败：{ex.Message}", "ExtractPage");
+                }
+            }
+            StatusTextBlock.Text = $"解压完成：{ok} 成功，{fail} 失败";
         }
-        catch (Exception ex)
-        {
-            StatusTextBlock.Text = $"解压失败：{ex.Message}";
-            Logger.Error($"解压失败：{ex.Message}", "ExtractPage");
-        }
-        finally
-        {
-            HideProgress();
-        }
+        finally { HideProgress(); }
     }
 
-    private void ShowProgress()
-    {
-        OperationProgress.Visibility = Visibility.Visible;
-        OperationProgress.IsIndeterminate = false;
-        OperationProgress.Value = 0;
-    }
-
-    private void HideProgress()
-    {
-        OperationProgress.Visibility = Visibility.Collapsed;
-        OperationProgress.Value = 0;
-    }
+    private void ShowProgress() { OperationProgress.Visibility = Visibility.Visible; OperationProgress.IsIndeterminate = true; }
+    private void HideProgress() { OperationProgress.Visibility = Visibility.Collapsed; OperationProgress.IsIndeterminate = false; }
 
     private void Cancel_Click(object sender, RoutedEventArgs e)
     {
-        Logger.Info("取消解压", "ExtractPage");
-        _archivePath = string.Empty;
+        _archives.Clear();
         _outputPath = string.Empty;
-        ArchivePathBox.Text = string.Empty;
+        ArchivesList.ItemsSource = null;
         ExtractToBox.Text = string.Empty;
         PasswordBox.Password = string.Empty;
         StatusTextBlock.Text = "已取消";
         HideProgress();
+    }
+
+    private void ClearArchives_Click(object sender, RoutedEventArgs e)
+    {
+        _archives.Clear();
+        ArchivesList.ItemsSource = null;
+        ArchivesList.ItemsSource = _archives.ToList();
+        Logger.Info("清空压缩包列表", "ExtractPage");
+    }
+
+    // ─────────────────────────────────────────────────────
+    //  拖入
+    // ─────────────────────────────────────────────────────
+    private void ExtractPage_DragOver(object sender, DragEventArgs e)
+    {
+        if (e.DataView.Contains(StandardDataFormats.StorageItems))
+        {
+            e.AcceptedOperation = DataPackageOperation.Copy;
+            e.DragUIOverride.Caption = "拖到此处添加压缩包";
+        }
+    }
+
+    private async void ExtractPage_Drop(object sender, DragEventArgs e)
+    {
+        if (!e.DataView.Contains(StandardDataFormats.StorageItems)) return;
+
+        var items = await e.DataView.GetStorageItemsAsync();
+        int added = 0;
+        foreach (var item in items)
+        {
+            var path = item.Path;
+            if (string.IsNullOrEmpty(path)) continue;
+            if (_archives.Contains(path)) continue;
+            _archives.Add(path);
+            added++;
+        }
+        RefreshList();
+        Logger.Info($"拖入：加了 {added} 个，共 {_archives.Count} 个", "ExtractPage");
     }
 }
