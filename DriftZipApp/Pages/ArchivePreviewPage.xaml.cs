@@ -497,8 +497,10 @@ public sealed partial class ArchivePreviewPage : Page
                 try
                 {
                     var outPath = Path.Combine(tempDir, Path.GetFileName(entry.Name));
+                    Logger.Info($"拖出：开始 ExtractFile {entry.RawName}", "ArchivePreviewPage");
                     using (var fs = File.Create(outPath)) extractor.ExtractFile(entry.RawName, fs);
                     if (File.Exists(outPath)) files.Add(await StorageFile.GetFileFromPathAsync(outPath));
+                    Logger.Info($"拖出：ExtractFile 完成", "ArchivePreviewPage");
                 }
                 catch (Exception ex) { Logger.Warn($"拖出单项失败：{ex.Message}", "ArchivePreviewPage"); }
             }
